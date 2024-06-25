@@ -40,15 +40,20 @@ export default function LoginForm() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: z.infer<typeof loginRequestSchema>) =>
-      fetch(
+    mutationFn: (data: z.infer<typeof loginRequestSchema>) => {
+      console.log([
+        `Fetching: https://stkb.vercel.app/api/xsolla/oauth2/login/email/request`,
+        data.email,
+      ]);
+
+      return fetch(
         generateUrl(
-          "https://stkb.vercel.app/api/xzolla/oauth2/login/email/request",
+          "https://stkb.vercel.app/api/xsolla/oauth2/login/email/request",
           {
             response_type: "code",
             client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
             scope: "offline",
-            state: "xzollatest",
+            state: "xsollatest",
             redirect_uri: "https://login.xsolla.com/api/blank",
             engine: "unity",
             engine_v: "2022.3.20f1",
@@ -62,8 +67,10 @@ export default function LoginForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email: data.email, send_link: false }),
+          cache: "no-store",
         },
-      ),
+      );
+    },
   });
 
   async function onSubmit(data: z.infer<typeof loginRequestSchema>) {
