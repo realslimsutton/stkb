@@ -42,17 +42,20 @@ export default function LoginForm() {
   const mutation = useMutation({
     mutationFn: (data: z.infer<typeof loginRequestSchema>) =>
       fetch(
-        generateUrl("https://login.xsolla.com/api/oauth2/login/email/request", {
-          response_type: "code",
-          client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
-          scope: "offline",
-          state: "randomteststring",
-          redirect_uri: "https://login.xsolla.com/api/blank",
-          engine: "unity",
-          engine_v: "2022.3.20f1",
-          sdk: "login",
-          sdk_v: "0.7.1",
-        }),
+        generateUrl(
+          "https://stkb.vercel.app/api/xzolla/oauth2/login/email/request",
+          {
+            response_type: "code",
+            client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
+            scope: "offline",
+            state: "randomteststring",
+            redirect_uri: "https://login.xsolla.com/api/blank",
+            engine: "unity",
+            engine_v: "2022.3.20f1",
+            sdk: "login",
+            sdk_v: "0.7.1",
+          },
+        ),
         {
           method: "POST",
           headers: {

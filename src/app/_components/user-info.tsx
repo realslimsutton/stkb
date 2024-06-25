@@ -11,7 +11,7 @@ export default function UserInfo() {
     queryKey: ["user"],
     queryFn: async () => {
       const response = await fetch(
-        generateUrl("https://login.xsolla.com/api/users/me", {
+        generateUrl("https://stkb.vercel.app/api/xzolla/users/me", {
           engine: "unity",
           engine_v: "2022.3.20f1",
           sdk: "login",
