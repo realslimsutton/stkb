@@ -13,12 +13,29 @@ const config = {
     ignoreDuringBuilds: true,
   },
   async rewrites() {
-    return [
-      {
-        source: "/proxy/xsolla/login/email/request",
-        destination: "https://login.xsolla.com/api/oauth2/login/email/request",
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: "/proxy/xsolla/login/email/request",
+          destination:
+            "https://login.xsolla.com/api/oauth2/login/email/request",
+        },
+      ],
+      afterFiles: [
+        {
+          source: "/proxy/xsolla/login/email/request",
+          destination:
+            "https://login.xsolla.com/api/oauth2/login/email/request",
+        },
+      ],
+      fallback: [
+        {
+          source: "/proxy/xsolla/login/email/request",
+          destination:
+            "https://login.xsolla.com/api/oauth2/login/email/request",
+        },
+      ],
+    };
   },
   async redirects() {
     return [
