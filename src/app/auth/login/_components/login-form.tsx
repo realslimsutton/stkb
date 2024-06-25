@@ -42,7 +42,7 @@ export default function LoginForm() {
   const mutation = useMutation({
     mutationFn: (data: z.infer<typeof loginRequestSchema>) => {
       return fetch(
-        generateUrl("/xsolla/oauth2/login/email/request", {
+        generateUrl("/api/xsolla/login/email/request", {
           response_type: "code",
           client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
           scope: "offline",

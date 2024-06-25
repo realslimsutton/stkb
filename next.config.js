@@ -15,8 +15,8 @@ const config = {
   async rewrites() {
     return [
       {
-        source: "/xsolla/:path*",
-        destination: "https://login.xsolla.com/api/:path*",
+        source: "/api/xsolla/login/email/request",
+        destination: "https://login.xsolla.com/api/oauth2/login/email/request",
       },
     ];
   },
