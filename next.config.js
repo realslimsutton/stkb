@@ -16,21 +16,21 @@ const config = {
     return {
       beforeFiles: [
         {
-          source: "/proxy/xsolla/login/email/request",
+          source: "/api/proxy/xsolla/login/email/request",
           destination:
             "https://login.xsolla.com/api/oauth2/login/email/request",
         },
       ],
       afterFiles: [
         {
-          source: "/proxy/xsolla/login/email/request",
+          source: "/api/proxy/xsolla/login/email/request",
           destination:
             "https://login.xsolla.com/api/oauth2/login/email/request",
         },
       ],
       fallback: [
         {
-          source: "/proxy/xsolla/login/email/request",
+          source: "/api/proxy/xsolla/login/email/request",
           destination:
             "https://login.xsolla.com/api/oauth2/login/email/request",
         },
