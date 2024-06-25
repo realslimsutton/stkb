@@ -20,6 +20,15 @@ const config = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/auth",
+        destination: "/auth/login",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default config;
