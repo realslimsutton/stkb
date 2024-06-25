@@ -23,6 +23,7 @@ export default function UserInfo() {
             Authorization: `Bearer ${sessionStorage.getItem("xsollaToken")}`,
           },
           cache: "no-store",
+          mode: "no-cors",
         },
       );
 

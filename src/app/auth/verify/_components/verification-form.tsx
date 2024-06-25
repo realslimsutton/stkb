@@ -71,6 +71,7 @@ export default function VerificationForm({
             code: data.code,
           }),
           cache: "no-store",
+          mode: "no-cors",
         },
       );
     },
@@ -97,6 +98,7 @@ export default function VerificationForm({
             redirect_uri: "https://login.xsolla.com/api/blank",
           }),
           cache: "no-store",
+          mode: "no-cors",
         },
       ),
   });
@@ -116,6 +118,7 @@ export default function VerificationForm({
             Authorization: `Bearer ${data.token}`,
           },
           cache: "no-store",
+          mode: "no-cors",
         },
       ),
   });
