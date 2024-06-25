@@ -59,7 +59,6 @@ export default function LoginForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email: data.email, send_link: false }),
-          mode: "no-cors",
         },
       ),
   });

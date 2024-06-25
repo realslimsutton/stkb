@@ -71,7 +71,6 @@ export default function VerificationForm({
             code: data.code,
           }),
           cache: "no-store",
-          mode: "no-cors",
         },
       );
     },
@@ -98,7 +97,6 @@ export default function VerificationForm({
             redirect_uri: "https://login.xsolla.com/api/blank",
           }),
           cache: "no-store",
-          mode: "no-cors",
         },
       ),
   });
@@ -118,7 +116,6 @@ export default function VerificationForm({
             Authorization: `Bearer ${data.token}`,
           },
           cache: "no-store",
-          mode: "no-cors",
         },
       ),
   });
@@ -192,7 +189,9 @@ export default function VerificationForm({
       sessionStorage.setItem("xsollaToken", token);
       await queryClient.invalidateQueries({ queryKey: ["user"] });
 
-      toast.success("Successfully logged in");
+      toast.success("Successfully logged in", {
+        id: toastId,
+      });
 
       success = true;
     } catch (err) {
