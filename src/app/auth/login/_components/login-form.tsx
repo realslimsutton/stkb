@@ -48,7 +48,7 @@ export default function LoginForm() {
             response_type: "code",
             client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
             scope: "offline",
-            state: "randomteststring",
+            state: "xzollatest",
             redirect_uri: "https://login.xsolla.com/api/blank",
             engine: "unity",
             engine_v: "2022.3.20f1",
@@ -72,6 +72,13 @@ export default function LoginForm() {
 
     try {
       const response = await mutation.mutateAsync(data);
+
+      if (response.status !== 200) {
+        toast.error("An unknown error has occured", {
+          description: "Please try again later",
+        });
+        return;
+      }
 
       const { operation_id: operationId } = (await response.json()) as {
         operation_id?: string;
