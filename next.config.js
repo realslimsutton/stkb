@@ -15,7 +15,7 @@ const config = {
   async rewrites() {
     return [
       {
-        source: "/api/xsolla/login/email/request",
+        source: "/proxy/xsolla/login/email/request",
         destination: "https://login.xsolla.com/api/oauth2/login/email/request",
       },
     ];
