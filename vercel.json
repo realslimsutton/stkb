@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/xsolla/:path*",
       "destination": "https://login.xsolla.com/api/:path*"
     }
   ]
