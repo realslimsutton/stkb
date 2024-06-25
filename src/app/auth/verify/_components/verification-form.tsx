@@ -174,6 +174,7 @@ export default function VerificationForm({
   async function onSubmit(data: z.infer<typeof verificationFormSchema>) {
     const toastId = toast.loading("Verifying code...");
 
+    let success = false;
     try {
       const code = await getAuthCode(data);
 
@@ -193,13 +194,17 @@ export default function VerificationForm({
 
       toast.success("Successfully logged in");
 
-      router.push("/");
+      success = true;
     } catch (err) {
       console.log(err);
 
       toast.error("Invalid code", {
         id: toastId,
       });
+    }
+
+    if (success) {
+      router.push("/");
     }
   }
 

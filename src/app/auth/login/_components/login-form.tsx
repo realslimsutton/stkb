@@ -62,8 +62,16 @@ export default function LoginForm() {
           mode: "no-cors",
         },
       ),
-    async onSuccess(data, variables) {
-      const { operation_id: operationId } = (await data.json()) as {
+  });
+
+  async function onSubmit(data: z.infer<typeof loginRequestSchema>) {
+    let searchParams = null;
+    let success = false;
+
+    try {
+      const response = await mutation.mutateAsync(data);
+
+      const { operation_id: operationId } = (await response.json()) as {
         operation_id?: string;
       };
       if (!operationId) {
@@ -73,24 +81,25 @@ export default function LoginForm() {
         return;
       }
 
-      toast.success("Email sent", {
-        description: "Please check your email for the code",
-      });
-
-      const searchParams = new URLSearchParams({
-        email: variables.email,
+      searchParams = new URLSearchParams({
+        email: data.email,
         operationId,
       });
 
-      router.push(`/auth/verify?${searchParams.toString()}`);
-    },
-    onError(error, variables, context) {
-      console.log([error, variables, context]);
-    },
-  });
+      success = true;
+    } catch (err) {
+      console.log(err);
+    }
 
-  function onSubmit(data: z.infer<typeof loginRequestSchema>) {
-    mutation.mutate(data);
+    if (!searchParams || !success) {
+      return;
+    }
+
+    toast.success("Email sent", {
+      description: "Please check your email for the code",
+    });
+
+    router.push(`/auth/verify?${searchParams.toString()}`);
   }
 
   return (
