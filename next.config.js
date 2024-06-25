@@ -12,6 +12,14 @@ const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/xzolla/:path*",
+        destination: "https://login.xsolla.com/api/:path*",
+      },
+    ];
+  },
 };
 
 export default config;
