@@ -15,7 +15,7 @@ const config = {
   async rewrites() {
     return [
       {
-        source: "/api/xsolla/:path*",
+        source: "/xsolla/api/:path*",
         destination: "https://login.xsolla.com/api/:path*",
       },
     ];
