@@ -53,16 +53,13 @@ export default function VerificationForm({
   const confirmationMutation = useMutation({
     mutationFn: (data: z.infer<typeof verificationFormSchema>) => {
       return fetch(
-        generateUrl(
-          "https://stkb.vercel.app/xsolla/oauth2/login/email/confirm",
-          {
-            client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
-            engine: "unity",
-            engine_v: "2022.3.20f1",
-            sdk: "login",
-            sdk_v: "0.7.1",
-          },
-        ),
+        generateUrl("/xsolla/oauth2/login/email/confirm", {
+          client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
+          engine: "unity",
+          engine_v: "2022.3.20f1",
+          sdk: "login",
+          sdk_v: "0.7.1",
+        }),
         {
           method: "POST",
           headers: {
@@ -82,7 +79,7 @@ export default function VerificationForm({
   const tokenMutation = useMutation({
     mutationFn: (data: { code: string }) =>
       fetch(
-        generateUrl("https://stkb.vercel.app/xsolla/oauth2/token", {
+        generateUrl("/xsolla/oauth2/token", {
           engine: "unity",
           engine_v: "2022.3.20f1",
           sdk: "login",
@@ -107,7 +104,7 @@ export default function VerificationForm({
   const userMutation = useMutation({
     mutationFn: (data: { token: string }) =>
       fetch(
-        generateUrl("https://stkb.vercel.app/xsolla/users/me", {
+        generateUrl("/xsolla/users/me", {
           engine: "unity",
           engine_v: "2022.3.20f1",
           sdk: "login",
