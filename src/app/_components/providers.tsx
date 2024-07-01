@@ -7,9 +7,10 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import * as React from "react";
-import { createQueryClient } from "~/lib/utils";
+import { createQueryClient } from "~/lib/query";
 import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
 import { TooltipProvider } from "~/components/ui/tooltip";
+import { ThemeProvider } from "~/components/theme/provider";
 
 let browserQueryClient: QueryClient | undefined = undefined;
 
@@ -31,7 +32,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ReactQueryStreamedHydration>
-        <TooltipProvider>{children}</TooltipProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </ReactQueryStreamedHydration>
 
       <ReactQueryDevtools initialIsOpen={false} />

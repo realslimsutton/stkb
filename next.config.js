@@ -12,31 +12,6 @@ const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: "/api/proxy/xsolla/login/email/request",
-          destination:
-            "https://login.xsolla.com/api/oauth2/login/email/request",
-        },
-      ],
-      afterFiles: [
-        {
-          source: "/api/proxy/xsolla/login/email/request",
-          destination:
-            "https://login.xsolla.com/api/oauth2/login/email/request",
-        },
-      ],
-      fallback: [
-        {
-          source: "/api/proxy/xsolla/login/email/request",
-          destination:
-            "https://login.xsolla.com/api/oauth2/login/email/request",
-        },
-      ],
-    };
-  },
   async redirects() {
     return [
       {
@@ -47,6 +22,16 @@ const config = {
     ];
   },
   skipTrailingSlashRedirect: true,
+  webpack(config) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ["@svgr/webpack"],
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return config;
+  },
 };
 
 export default config;

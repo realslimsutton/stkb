@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -28,9 +28,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "~/components/ui/input-otp";
-import { env } from "~/env";
-import { generateUrl } from "~/lib/utils";
-import { type XSollaUser } from "~/types";
+import confirmEmail from "../_actions/confirm-email";
 import { verificationFormSchema } from "../_lib/schema";
 
 export default function VerificationForm({
@@ -41,7 +39,6 @@ export default function VerificationForm({
   operationId: string;
 }) {
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof verificationFormSchema>>({
     resolver: zodResolver(verificationFormSchema),
@@ -51,87 +48,18 @@ export default function VerificationForm({
   });
 
   const confirmationMutation = useMutation({
-    mutationFn: (data: z.infer<typeof verificationFormSchema>) => {
-      return fetch(
-        generateUrl("/xsolla/oauth2/login/email/confirm", {
-          client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
-          engine: "unity",
-          engine_v: "2022.3.20f1",
-          sdk: "login",
-          sdk_v: "0.7.1",
-        }),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            operation_id: operationId,
-            code: data.code,
-          }),
-          cache: "no-store",
-        },
-      );
+    mutationFn: async (data: z.infer<typeof verificationFormSchema>) => {
+      const form = new FormData();
+      form.append("email", email);
+      form.append("operationId", operationId);
+      form.append("code", data.code);
+
+      return await confirmEmail(form);
     },
   });
 
-  const tokenMutation = useMutation({
-    mutationFn: (data: { code: string }) =>
-      fetch(
-        generateUrl("/xsolla/oauth2/token", {
-          engine: "unity",
-          engine_v: "2022.3.20f1",
-          sdk: "login",
-          sdk_v: "0.7.1",
-        }),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
-            grant_type: "authorization_code",
-            code: data.code,
-            redirect_uri: "https://login.xsolla.com/api/blank",
-          }),
-          cache: "no-store",
-        },
-      ),
-  });
-
-  const userMutation = useMutation({
-    mutationFn: (data: { token: string }) =>
-      fetch(
-        generateUrl("/xsolla/users/me", {
-          engine: "unity",
-          engine_v: "2022.3.20f1",
-          sdk: "login",
-          sdk_v: "0.7.1",
-        }),
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${data.token}`,
-          },
-          cache: "no-store",
-        },
-      ),
-  });
-
   async function getAuthCode(data: z.infer<typeof verificationFormSchema>) {
-    const response = await confirmationMutation.mutateAsync(data);
-
-    const { login_url: loginUrl } = (await response.json()) as {
-      login_url?: string;
-    };
-    if (!loginUrl) {
-      throw new Error("Invalid code");
-    }
-
-    const url = new URL(loginUrl);
-    const code = url.searchParams.get("code");
+    const code = await confirmationMutation.mutateAsync(data);
     if (!code) {
       throw new Error("Invalid code");
     }
@@ -139,71 +67,21 @@ export default function VerificationForm({
     return code;
   }
 
-  async function getToken(code: string) {
-    const response = await tokenMutation.mutateAsync({ code });
-
-    const { access_token: accessToken } = (await response.json()) as {
-      access_token?: string;
-      expires_in?: number;
-      refresh_token?: string;
-      scope?: string;
-      token_type?: string;
-    };
-
-    if (!accessToken) {
-      throw new Error("Invalid code");
-    }
-
-    return accessToken;
-  }
-
-  async function getUser(token: string) {
-    const response = await userMutation.mutateAsync({ token });
-
-    const user = (await response.json()) as XSollaUser;
-    if (response.status !== 200 || !user) {
-      throw new Error("Invalid code");
-    }
-
-    return user;
-  }
-
   async function onSubmit(data: z.infer<typeof verificationFormSchema>) {
     const toastId = toast.loading("Verifying code...");
 
-    let success = false;
     try {
-      const code = await getAuthCode(data);
-
-      toast.loading("Logging in...", {
-        id: toastId,
-      });
-
-      const token = await getToken(code);
-
-      toast.loading("Fetching user...", {
-        id: toastId,
-      });
-
-      await getUser(token);
-      sessionStorage.setItem("xsollaToken", token);
-      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      await getAuthCode(data);
 
       toast.success("Successfully logged in", {
         id: toastId,
       });
 
-      success = true;
-    } catch (err) {
-      console.log(err);
-
+      router.push("/");
+    } catch {
       toast.error("Invalid code", {
         id: toastId,
       });
-    }
-
-    if (success) {
-      router.push("/");
     }
   }
 

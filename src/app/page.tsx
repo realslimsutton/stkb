@@ -1,9 +1,12 @@
-import UserInfo from "./_components/user-info";
+import Header from "./_components/header";
+import HeroBanner from "./_components/hero-banner";
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
-    <div className="p-4">
-      <UserInfo />
-    </div>
+    <>
+      <Header />
+
+      <HeroBanner />
+    </>
   );
 }

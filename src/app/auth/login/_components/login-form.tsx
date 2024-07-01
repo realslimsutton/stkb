@@ -1,7 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { type z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -22,11 +24,8 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import loginRequest from "../_actions/login-request";
 import { loginRequestSchema } from "../_lib/schema";
-import { useMutation } from "@tanstack/react-query";
-import { generateUrl } from "~/lib/utils";
-import { env } from "~/env";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
@@ -40,74 +39,38 @@ export default function LoginForm() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: z.infer<typeof loginRequestSchema>) => {
-      return fetch(
-        generateUrl("/api/proxy/xsolla/login/email/request", {
-          response_type: "code",
-          client_id: env.NEXT_PUBLIC_ST_CLIENT_ID,
-          scope: "offline",
-          state: "xsollatest",
-          redirect_uri: "https://login.xsolla.com/api/blank",
-          engine: "unity",
-          engine_v: "2022.3.20f1",
-          sdk: "login",
-          sdk_v: "0.7.1",
-        }),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email: data.email, send_link: false }),
-          cache: "no-store",
-        },
-      );
+    mutationFn: async (data: z.infer<typeof loginRequestSchema>) => {
+      const form = new FormData();
+      form.append("email", data.email);
+
+      return await loginRequest(form);
+    },
+    onSuccess: (data, variables) => {
+      if (!data?.operationId) {
+        form.setError("email", {
+          message: "Invalid email address",
+        });
+        return;
+      }
+
+      toast.success("Check your email for a login code");
+
+      const searchParams = new URLSearchParams({
+        email: variables.email,
+        operationId: data.operationId,
+      });
+
+      router.push(`/auth/verify?${searchParams.toString()}`);
+    },
+    onError: () => {
+      form.setError("email", {
+        message: "Invalid email address",
+      });
     },
   });
 
   async function onSubmit(data: z.infer<typeof loginRequestSchema>) {
-    let searchParams = null;
-    let success = false;
-
-    try {
-      const response = await mutation.mutateAsync(data);
-
-      if (response.status !== 200) {
-        toast.error("An unknown error has occured", {
-          description: "Please try again later",
-        });
-        return;
-      }
-
-      const { operation_id: operationId } = (await response.json()) as {
-        operation_id?: string;
-      };
-      if (!operationId) {
-        toast.error("An unknown error has occured", {
-          description: "Please try again later",
-        });
-        return;
-      }
-
-      searchParams = new URLSearchParams({
-        email: data.email,
-        operationId,
-      });
-
-      success = true;
-    } catch (err) {
-      console.log(err);
-    }
-
-    if (!searchParams || !success) {
-      return;
-    }
-
-    toast.success("Email sent", {
-      description: "Please check your email for the code",
-    });
-
-    router.push(`/auth/verify?${searchParams.toString()}`);
+    mutation.mutate(data);
   }
 
   return (

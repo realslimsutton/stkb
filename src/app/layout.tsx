@@ -1,7 +1,7 @@
-import "~/styles/globals.css";
 import { Inter } from "next/font/google";
-import { cn } from "~/lib/utils";
 import { Toaster } from "~/components/ui/sonner";
+import { cn } from "~/lib/utils";
+import "~/styles/globals.css";
 import Providers from "./_components/providers";
 
 const inter = Inter({
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
@@ -29,9 +29,13 @@ export default function RootLayout({
         )}
       >
         <Providers>
-          <main>{children}</main>
+          <a href="#content" className="sr-only focus:not-sr-only">
+            Skip to content
+          </a>
 
-          <Toaster />
+          <main id="content">{children}</main>
+
+          <Toaster richColors />
         </Providers>
       </body>
     </html>

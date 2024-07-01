@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const searchParamsSchema = z.object({
-  email: z.string().email().min(0),
+  email: z.string().email().min(1),
   operationId: z.string(),
 });
 
