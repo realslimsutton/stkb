@@ -2,6 +2,7 @@ import { ExternalLinkIcon, GithubIcon } from "lucide-react";
 import Link from "next/link";
 import { HTMLAttributeAnchorTarget } from "react";
 import Logo from "~/components/layout/logo";
+import { ThemeToggle } from "~/components/theme/toggle";
 
 export default function Footer() {
   return (
@@ -73,15 +74,21 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 space-y-2 text-xs">
-          <p>
-            We are not endorsed, sponsored or commissioned by Kabam Games inc.
-          </p>
+        <div className="mt-8 flex flex-wrap justify-between gap-2 text-xs">
+          <div className="space-y-2">
+            <p>
+              We are not endorsed, sponsored or commissioned by Kabam Games inc.
+            </p>
 
-          <p>
-            Disclaimer: All trademarks and registered trademarks are the
-            property of their respective owners.
-          </p>
+            <p>
+              Disclaimer: All trademarks and registered trademarks are the
+              property of their respective owners.
+            </p>
+          </div>
+
+          <div className="flex w-full items-center justify-center sm:w-auto">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </footer>
