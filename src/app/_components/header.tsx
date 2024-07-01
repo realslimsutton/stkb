@@ -17,7 +17,7 @@ export default function Header() {
 
       <header
         className={cn({
-          "fixed inset-x-0 top-0 z-[200] mx-auto mt-4 flex w-[95%] max-w-[90rem] items-center justify-between rounded-2xl px-4 py-4 antialiased transition-all md:w-full md:px-10":
+          "fixed inset-x-0 top-0 z-50 mx-auto mt-4 flex w-[95%] max-w-[90rem] items-center justify-between rounded-2xl px-4 py-4 antialiased transition-all md:w-full md:px-10":
             true,
           "bg-secondary/50 shadow shadow-secondary backdrop-blur-xl": !inView,
         })}
