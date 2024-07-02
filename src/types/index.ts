@@ -1,6 +1,11 @@
 export type SearchParams = Record<string, string>;
 
-export type User = {
+export type SessionData = {
+  user?: XSollaUser;
+  token?: string;
+};
+
+export type XSollaUser = {
   id: string;
   username: string | null;
   nickname: string | null;
@@ -41,12 +46,13 @@ export type User = {
   };
   is_last_email_confirmed: boolean | null;
   is_user_active: boolean;
-  userInfo: {
-    id: string;
-    uuid: string;
-    name: string;
-    lvl: number;
-  };
+};
+
+export type User = {
+  id: string;
+  uuid: string;
+  name: string;
+  lvl: number;
 };
 
 export type Account = {

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/xsolla/:path*",
+      "destination": "https://playshoptitans.com/api/xsolla/:path*"
+    }
+  ]
+}

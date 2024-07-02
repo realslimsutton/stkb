@@ -12,6 +12,14 @@ const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/xsolla/:path*",
+        destination: "https://playshoptitans.com/api/xsolla/:path*",
+      },
+    ];
+  },
   async redirects() {
     return [
       {

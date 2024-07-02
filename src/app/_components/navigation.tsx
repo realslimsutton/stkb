@@ -3,15 +3,23 @@
 import { ChevronRightIcon, ExternalLinkIcon, MenuIcon } from "lucide-react";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
+import { toast } from "sonner";
 import HeroBackground from "~/../public/images/hero_academia_background.png";
+import { logout } from "~/auth/utils";
 import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -22,8 +30,10 @@ import {
 } from "~/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
+import { type User } from "~/types";
 
-export function DesktopNavigation() {
+export function DesktopNavigation({ user }: { user: User | null }) {
+  const router = useRouter();
   const pathname = usePathname();
 
   const isHeroPage = React.useMemo(
@@ -51,11 +61,6 @@ export function DesktopNavigation() {
 
   const isBlogPage = React.useMemo(
     () => isRouteActive(pathname, "/blog"),
-    [pathname],
-  );
-
-  const isFaqPage = React.useMemo(
-    () => isRouteActive(pathname, "/faq"),
     [pathname],
   );
 
@@ -183,8 +188,8 @@ export function DesktopNavigation() {
               className={cn({
                 "bg-transparent hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent":
                   true,
-                "text-muted-foreground": !isBlogPage && !isFaqPage,
-                "text-accent-foreground": isBlogPage || isFaqPage,
+                "text-muted-foreground": !isBlogPage,
+                "text-accent-foreground": isBlogPage,
               })}
             >
               Resources
@@ -196,7 +201,7 @@ export function DesktopNavigation() {
                   Read our latest blog posts.
                 </DesktopListItem>
 
-                <DesktopListItem href="/" title="FAQ" active={isFaqPage}>
+                <DesktopListItem href="/#faq" title="FAQ" active={false}>
                   Frequently asked questions.
                 </DesktopListItem>
 
@@ -236,11 +241,45 @@ export function DesktopNavigation() {
             </Button>
           </NavigationMenuLink>
 
-          <NavigationMenuLink asChild>
-            <Button asChild>
-              <Link href="/auth/login">Get Started</Link>
-            </Button>
-          </NavigationMenuLink>
+          {user && (
+            <NavigationMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost">{user.name}</Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="min-w-48">
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={async () => {
+                      await logout();
+
+                      toast.success("You have been successfully logged out.", {
+                        action: {
+                          label: "Login",
+                          onClick: () => {
+                            router.push("/auth/login");
+                          },
+                        },
+                      });
+
+                      router.push("/");
+                    }}
+                  >
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </NavigationMenuItem>
+          )}
+
+          {!user && (
+            <NavigationMenuLink asChild>
+              <Button asChild>
+                <Link href="/auth/login">Get Started</Link>
+              </Button>
+            </NavigationMenuLink>
+          )}
         </NavigationMenuList>
       </NavigationMenu>
     </>
@@ -323,7 +362,7 @@ export function MobileNavigation() {
                   Read our latest blog posts.
                 </MobileListDropdownItem>
 
-                <MobileListDropdownItem href="/" title="FAQ">
+                <MobileListDropdownItem href="/#faq" title="FAQ">
                   Frequently asked questions.
                 </MobileListDropdownItem>
 

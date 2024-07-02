@@ -28,7 +28,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "~/components/ui/input-otp";
-import confirmEmail from "../_actions/confirm-email";
+import fetchUser from "../_actions/fetch-user";
 import { verificationFormSchema } from "../_lib/schema";
 
 export default function VerificationForm({
@@ -47,39 +47,71 @@ export default function VerificationForm({
     },
   });
 
-  const confirmationMutation = useMutation({
+  const verifyCodeMutation = useMutation({
     mutationFn: async (data: z.infer<typeof verificationFormSchema>) => {
-      const form = new FormData();
-      form.append("email", email);
-      form.append("operationId", operationId);
-      form.append("code", data.code);
+      const searchParams = new URLSearchParams({
+        email,
+        operation_id: operationId,
+        code: data.code,
+      });
 
-      return await confirmEmail(form);
+      const response = await fetch(
+        `/api/xsolla/xsollaCompleteEmailAuth?${searchParams.toString()}`,
+      );
+
+      if (response.status !== 200) {
+        return null;
+      }
+
+      const { message } = (await response.json()) as { message?: string };
+      return message ?? null;
     },
   });
 
-  async function getAuthCode(data: z.infer<typeof verificationFormSchema>) {
-    const code = await confirmationMutation.mutateAsync(data);
-    if (!code) {
-      throw new Error("Invalid code");
-    }
+  const fetchUserMutation = useMutation({
+    mutationFn: async (data: string) => {
+      const form = new FormData();
+      form.append("token", data);
 
-    return code;
-  }
+      return await fetchUser(form);
+    },
+  });
 
   async function onSubmit(data: z.infer<typeof verificationFormSchema>) {
     const toastId = toast.loading("Verifying code...");
 
     try {
-      await getAuthCode(data);
+      const token = await verifyCodeMutation.mutateAsync(data);
+      if (!token) {
+        toast.error("Invalid code", {
+          id: toastId,
+        });
+        form.setError("code", {
+          message: "Invalid code",
+        });
+
+        return;
+      }
+
+      toast.loading("Fetching user data...", {
+        id: toastId,
+      });
+
+      if (!(await fetchUserMutation.mutateAsync(token))) {
+        toast.error("Failed to fetch user data", {
+          id: toastId,
+        });
+        return;
+      }
 
       toast.success("Successfully logged in", {
         id: toastId,
       });
 
       router.push("/");
-    } catch {
-      toast.error("Invalid code", {
+    } catch (err) {
+      toast.error("Unknown error occured", {
+        description: "Please try again later.",
         id: toastId,
       });
     }
@@ -127,7 +159,14 @@ export default function VerificationForm({
           </CardContent>
 
           <CardFooter>
-            <Button className="w-full" disabled={form.formState.isSubmitting}>
+            <Button
+              className="w-full"
+              disabled={
+                form.formState.isSubmitting ||
+                verifyCodeMutation.isPending ||
+                fetchUserMutation.isPending
+              }
+            >
               Sign in
             </Button>
           </CardFooter>

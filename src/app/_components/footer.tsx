@@ -7,7 +7,7 @@ import { ThemeToggle } from "~/components/theme/toggle";
 export default function Footer() {
   return (
     <footer>
-      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div>
             <Logo href="/" />

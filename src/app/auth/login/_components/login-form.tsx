@@ -2,6 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { type z } from "zod";
@@ -24,9 +26,8 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import loginRequest from "../_actions/login-request";
+import { generateUrl } from "~/lib/utils";
 import { loginRequestSchema } from "../_lib/schema";
-import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -40,37 +41,71 @@ export default function LoginForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: z.infer<typeof loginRequestSchema>) => {
-      const form = new FormData();
-      form.append("email", data.email);
+      const response = await fetch(
+        generateUrl("/api/xsolla/xsollaStartEmailAuth", {
+          email: data.email,
+        }),
+      );
 
-      return await loginRequest(form);
-    },
-    onSuccess: (data, variables) => {
-      if (!data?.operationId) {
-        form.setError("email", {
-          message: "Invalid email address",
-        });
-        return;
+      const json = (await response.json()) as unknown;
+
+      const {
+        message: { operation_id: operationId },
+      } = json as {
+        message: { operation_id?: string };
+      };
+
+      if (!operationId) {
+        const {
+          message: { code },
+        } = json as {
+          message: { code?: string };
+        };
+
+        if (code === "010-005") {
+          throw new Error();
+        }
       }
 
-      toast.success("Check your email for a login code");
-
-      const searchParams = new URLSearchParams({
-        email: variables.email,
-        operationId: data.operationId,
-      });
-
-      router.push(`/auth/verify?${searchParams.toString()}`);
-    },
-    onError: () => {
-      form.setError("email", {
-        message: "Invalid email address",
-      });
+      return {
+        operationId: operationId,
+        status: response.status,
+      };
     },
   });
 
   async function onSubmit(data: z.infer<typeof loginRequestSchema>) {
-    mutation.mutate(data);
+    const toastId = toast.loading("Sending login code...");
+
+    try {
+      const response = await mutation.mutateAsync(data);
+
+      if (response.status !== 200) {
+        toast.error("Invalid email address", {
+          id: toastId,
+        });
+        return;
+      }
+
+      if (!response?.operationId) {
+        throw new Error();
+      }
+
+      toast.success("Check your email for a login code", {
+        id: toastId,
+      });
+
+      const searchParams = new URLSearchParams({
+        email: data.email,
+        operationId: response.operationId,
+      });
+
+      router.push(`/auth/verify?${searchParams.toString()}`);
+    } catch {
+      toast.error("Too many requests, please try again later", {
+        id: toastId,
+      });
+    }
   }
 
   return (
@@ -98,7 +133,15 @@ export default function LoginForm() {
                   </FormControl>
 
                   <FormDescription>
-                    This is the email used with your Kabam account.
+                    This is the email used with your{" "}
+                    <Link
+                      href="https://st-central.net/kabam-cross-connect-guide/"
+                      target="_blank"
+                      className="underline transition-colors hover:text-primary"
+                    >
+                      Kabam Cross Connect
+                    </Link>{" "}
+                    account.
                   </FormDescription>
 
                   <FormMessage />

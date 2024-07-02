@@ -2,6 +2,7 @@ import { type SearchParams } from "~/types";
 import { searchParamsSchema } from "./_lib/schema";
 import { redirect } from "next/navigation";
 import VerificationForm from "./_components/verification-form";
+import { getUser } from "~/shop-titans/utils";
 
 export default async function VerifyPage({
   searchParams,
@@ -13,6 +14,11 @@ export default async function VerifyPage({
 
   if (!parsedSearchParams.success || !parsedSearchParams.data) {
     redirect("/auth/login");
+  }
+
+  const user = await getUser();
+  if (user) {
+    redirect("/");
   }
 
   return (
