@@ -1,15 +1,17 @@
 "use client";
 
 import { ChevronRightIcon, ExternalLinkIcon, MenuIcon } from "lucide-react";
+import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
-import Logo from "~/components/layout/logo";
+import { usePathname } from "next/navigation";
+import * as React from "react";
+import HeroBackground from "~/../public/images/hero_academia_background.png";
 import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -18,13 +20,8 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "~/components/ui/navigation-menu";
+import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
-import * as React from "react";
-import Image from "next/image";
-
-import HeroBackground from "~/../public/images/background_collection_portrait.png";
-import { usePathname } from "next/navigation";
-import { ThemeToggle } from "~/components/theme/toggle";
 
 export function DesktopNavigation() {
   const pathname = usePathname();

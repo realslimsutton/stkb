@@ -1,6 +1,6 @@
 import { ExternalLinkIcon, GithubIcon } from "lucide-react";
 import Link from "next/link";
-import { HTMLAttributeAnchorTarget } from "react";
+import { type HTMLAttributeAnchorTarget } from "react";
 import Logo from "~/components/layout/logo";
 import { ThemeToggle } from "~/components/theme/toggle";
 
