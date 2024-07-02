@@ -31,6 +31,15 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
 import { type User } from "~/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
 
 export function DesktopNavigation({ user }: { user: User | null }) {
   const router = useRouter();
@@ -394,6 +403,54 @@ export function MobileNavigation() {
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function SpreadsheetImporter() {
+  return (
+    <li>
+      <Dialog>
+        <DialogTrigger asChild>
+          <NavigationMenuItem asChild>
+            <button className="block w-full select-none space-y-1 rounded-md p-3 font-medium leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+              <div className="flex items-center gap-1 text-sm leading-none">
+                Import Market Data
+              </div>
+
+              <p className="line-clamp-2 text-left text-sm leading-snug text-muted-foreground">
+                Import data from the spreadsheet.
+              </p>
+            </button>
+          </NavigationMenuItem>
+        </DialogTrigger>
+
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit profile</DialogTitle>
+            <DialogDescription>
+              Make changes to your profile here. Click save when you&apos;re
+              done.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            id="market-data-import-form"
+            onSubmit={(event: React.FormEvent) => {
+              toast.success("hello world");
+              console.log("yes");
+
+              event.preventDefault();
+            }}
+          ></form>
+
+          <DialogFooter>
+            <Button type="submit" form="market-data-import-form">
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </li>
   );
 }
 

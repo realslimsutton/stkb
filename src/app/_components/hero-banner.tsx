@@ -16,7 +16,7 @@ export default async function HeroBanner() {
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="inline-flex min-w-[theme(spacing.6)] items-center justify-center gap-x-1 rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-600 ring-1 ring-inset ring-green-600/10 dark:bg-green-400/10 dark:text-green-400 dark:ring-green-400/30">
-              Now launching in Alpha!
+              Now launching in Alpha
             </div>
 
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
