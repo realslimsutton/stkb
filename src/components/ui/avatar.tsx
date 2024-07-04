@@ -31,7 +31,7 @@ export default function Avatar({
       height={height ?? 40}
       width={width ?? 40}
       className={cn(
-        "aspect-square",
+        "max-w-none object-cover object-center",
         {
           "rounded-full": rounded,
         },

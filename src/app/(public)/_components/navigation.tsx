@@ -1,14 +1,11 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRightIcon, ExternalLinkIcon, MenuIcon } from "lucide-react";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
-import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import HeroBackground from "~/../public/images/hero_academia_background.png";
 import { logout } from "~/auth/utils";
 import { Button } from "~/components/ui/button";
@@ -33,14 +30,6 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/ui/form";
-import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
@@ -48,19 +37,10 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "~/components/ui/navigation-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
 import { type User } from "~/types";
 import importSpreadsheet from "../_actions/import-spreadsheet";
-import { importFormSchema } from "../_lib/import-schema";
-import { enableMarketImport } from "~/server/flags";
 
 export function DesktopNavigation({
   user,
@@ -373,24 +353,12 @@ export function MobileNavigation() {
             </CollapsibleContent>
           </Collapsible>
 
-          <Collapsible className="grid gap-4">
-            <CollapsibleTrigger className="flex w-full items-center text-lg font-semibold [&[data-state=open]>svg]:rotate-90">
-              Market{" "}
-              <ChevronRightIcon className="ml-auto h-5 w-5 transition-all" />
-            </CollapsibleTrigger>
-
-            <CollapsibleContent>
-              <div className="-mx-6 grid gap-6 bg-muted p-6">
-                <MobileListDropdownItem href="/" title="Live Market">
-                  View the current prices of the market.
-                </MobileListDropdownItem>
-
-                <MobileListDropdownItem href="/history" title="Market History">
-                  View historical data of the market.
-                </MobileListDropdownItem>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          <Link
+            href="/market"
+            className="flex w-full items-center text-lg font-semibold"
+          >
+            Market
+          </Link>
 
           <Collapsible className="grid gap-4">
             <CollapsibleTrigger className="flex w-full items-center text-lg font-semibold [&[data-state=open]>svg]:rotate-90">
