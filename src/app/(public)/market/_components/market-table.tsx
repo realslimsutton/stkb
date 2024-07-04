@@ -11,18 +11,25 @@ import { blueprints } from "~/server/db/schema";
 import { blueprintTypes } from "~/shop-titans/data/enums";
 import { DataTableColumnHeader } from "../../../../components/ui/datatable/column-header";
 
-import { ExternalLinkIcon, MoreHorizontal } from "lucide-react";
+import { ExternalLinkIcon, Filter, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
+import Image from "next/image";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { Label } from "~/components/ui/label";
+import { AutoComplete, Option } from "~/components/ui/autocomplete";
 
 const columns: ColumnDef<InferSelectModel<typeof blueprints>>[] = [
   {
@@ -58,7 +65,12 @@ const columns: ColumnDef<InferSelectModel<typeof blueprints>>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Value" />
     ),
-    cell: ({ row }) => <>{formatNumber(row.original.value)}</>,
+    cell: ({ row }) => (
+      <span className="flex items-center gap-1">
+        <Image src="/images/icon_gold.webp" alt="Gold" height="20" width="20" />
+        {formatNumber(row.original.value)}
+      </span>
+    ),
   },
   {
     accessorKey: "experience",
@@ -119,6 +131,17 @@ export default function MarketTable({
 }) {
   const data = React.use(dataLoader);
 
+  const tierFilterOptions: Option[] = React.useMemo(
+    () =>
+      Array.from({ length: 14 }, (v, i) => i + 1).map((tier) => ({
+        value: tier.toString(),
+        label: `Tier ${tier}`,
+      })),
+    [],
+  );
+
+  const [tierFilter, setTierFilter] = React.useState<Option>();
+
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
@@ -130,6 +153,10 @@ export default function MarketTable({
     columnVisibility,
     setColumnVisibility,
   });
+
+  React.useEffect(() => {
+    table.getColumn("tier")?.setFilterValue(tierFilter?.value);
+  }, [tierFilter]);
 
   return (
     <>
