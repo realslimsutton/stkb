@@ -1,3 +1,4 @@
+import { withVercelToolbar } from "@vercel/toolbar/plugins/next";
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
@@ -11,6 +12,19 @@ const config = {
   },
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "f9w4sqozvcfkizrn.public.blob.vercel-storage.com",
+        port: "",
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+      },
+    ],
   },
   async rewrites() {
     return [
@@ -32,4 +46,4 @@ const config = {
   skipTrailingSlashRedirect: true,
 };
 
-export default config;
+export default withVercelToolbar()(config);

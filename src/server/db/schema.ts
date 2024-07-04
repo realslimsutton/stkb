@@ -4,8 +4,11 @@
 import {
   type AnyPgColumn,
   bigint,
+  boolean,
   index,
   integer,
+  json,
+  jsonb,
   pgTableCreator,
   serial,
   smallint,
@@ -21,170 +24,122 @@ import {
  */
 export const createTable = pgTableCreator((name) => `stkb_${name}`);
 
-export const workers = createTable(
-  "workers",
-  {
-    id: serial("id").primaryKey(),
-    name: text("name").notNull(),
-    title: text("title").notNull(),
-    image: text("image").notNull(),
-    levelRequired: smallint("level_required").notNull().default(1),
-    gold: bigint("gold", { mode: "number" }).notNull().default(0),
-    gem: integer("gem").notNull().default(0),
-  },
-  (table) => ({
-    titleNameIndex: unique("workers_title_name_idx").on(
-      table.title,
-      table.name,
-    ),
-    levelRequiredIndex: index("workers_level_required_idx").on(
-      table.levelRequired,
-    ),
-    goldIndex: index("workers_gold_idx").on(table.gold),
-    gemIndex: index("workers_gem_idx").on(table.gem),
-  }),
-);
-
-export const components = createTable("components", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  image: text("image").notNull(),
-});
-
 export const blueprints = createTable(
   "blueprints",
   {
-    id: serial("id").primaryKey(),
+    id: text("id").notNull().primaryKey(),
     name: text("name").notNull(),
-    image: text("image").notNull(),
+    image: text("image"),
+    category: text("string").notNull(),
     type: text("type").notNull(),
-    tier: integer("tier").notNull(),
-    value: bigint("value", { mode: "number" }).notNull(),
-    prerequisite: text("prerequisite"),
-    researchScrolls: integer("research_scrolls").notNull().default(0),
-    antiqueTokens: integer("antique_tokens").notNull().default(0),
-    craftingTimeSeconds: bigint("crafting_time_seconds", {
-      mode: "number",
-    }).notNull(),
-    merchantExperience: bigint("merchant_experience", {
-      mode: "number",
-    }).notNull(),
-    workerExperience: integer("worker_experience").notNull(),
-    fusionExperience: integer("fusion_experience").notNull(),
-    favor: integer("favor").notNull(),
-    airshipPower: integer("airship_power").notNull(),
-    worker1: bigint("worker_1", { mode: "number" }).references(
-      () => workers.id,
-    ),
-    worker1Level: smallint("worker_1_level"),
-    worker2: bigint("worker_2", { mode: "number" }).references(
-      () => workers.id,
-    ),
-    worker2Level: smallint("worker_2_level"),
-    worker3: bigint("worker_3", { mode: "number" }).references(
-      () => workers.id,
-    ),
-    worker3Level: smallint("worker_3_level"),
-    stone: smallint("stone").notNull().default(0),
-    wood: smallint("wood").notNull().default(0),
-    leather: smallint("leather").notNull().default(0),
-    herb: smallint("herb").notNull().default(0),
-    steel: smallint("metal").notNull().default(0),
-    ironwood: smallint("ironwood").notNull().default(0),
-    fabric: smallint("fabric").notNull().default(0),
-    oil: smallint("oil").notNull().default(0),
-    mana: smallint("mana").notNull().default(0),
-    gems: smallint("gems").notNull().default(0),
-    essence: smallint("essence").notNull().default(0),
-    blueprint1: bigint("blueprint_1", { mode: "number" }).references(
-      (): AnyPgColumn => blueprints.id,
-    ),
-    blueprint1Quality: smallint("blueprint_1_quality"),
-    component1: bigint("component_1", { mode: "number" }).references(
-      () => components.id,
-    ),
-    componentBlueprint1Quantity: smallint("component_blueprint_1_quantity"),
-    blueprint2: bigint("blueprint_2", { mode: "number" }).references(
-      (): AnyPgColumn => blueprints.id,
-    ),
-    blueprint2Quality: smallint("blueprint_2_quality"),
-    component2: bigint("component_2", { mode: "number" }).references(
-      () => components.id,
-    ),
-    componentBlueprint2Quantity: smallint("component_blueprint_2_quantity"),
-    attack: integer("attack"),
-    defense: integer("defense"),
-    health: integer("health"),
-    evasion: integer("evasion"),
-    crit: integer("crit"),
+    subtype: text("subtype"),
+    level: smallint("level").notNull().default(1),
+    tier: smallint("tier").notNull().default(1),
+    subtier: smallint("subtier").notNull().default(0),
+    experience: bigint("experience", { mode: "number" }).notNull().default(0),
+    craftExperience: bigint("craft_experience", { mode: "number" })
+      .notNull()
+      .default(0),
+    value: bigint("value", { mode: "number" }).notNull().default(0),
+    favor: smallint("favor").notNull().default(0),
+    time: bigint("time", { mode: "number" }).notNull().default(0),
+    attack: integer("atk").notNull().default(0),
+    defence: integer("def").notNull().default(0),
+    health: integer("hp").notNull().default(0),
+    evasion: text("evasion").notNull().default("0"),
+    crit: text("crit").notNull().default("0"),
+    tradeMinValue: jsonb("trade_min_value")
+      .$type<number[]>()
+      .notNull()
+      .default([]),
+    tradeMaxValue: jsonb("trade_max_value")
+      .$type<number[]>()
+      .notNull()
+      .default([]),
+    worker1: text("worker_1").notNull(),
+    worker1Level: smallint("worker_1_level").notNull().default(1),
+    worker2: text("worker_2"),
+    worker2Level: smallint("worker_2_level").notNull().default(1),
+    worker3: text("worker_3"),
+    worker3Level: smallint("worker_3_level").notNull().default(1),
+    resource1: text("resource_1").notNull(),
+    resource1Qty: bigint("resource_1_qty", { mode: "number" }).notNull(),
+    resource2: text("resource_2"),
+    resource2Qty: bigint("resource_2_qty", { mode: "number" })
+      .notNull()
+      .default(0),
+    resource3: text("resource_3"),
+    resource3Qty: bigint("resource_3_qty", { mode: "number" })
+      .notNull()
+      .default(0),
+    component1: text("component_1"),
+    component1Qty: bigint("component_1_qty", { mode: "number" })
+      .notNull()
+      .default(0),
+    component2: text("component_2"),
+    component2Qty: bigint("component_2_qty", { mode: "number" })
+      .notNull()
+      .default(0),
     element: text("element"),
-    spirit: bigint("spirit", { mode: "number" }).references(
-      (): AnyPgColumn => blueprints.id,
-    ),
+    spirit: text("spirit"),
+    discountEnergy: integer("discount_energy").notNull().default(0),
+    surchargeEnergy: integer("surcharge_energy").notNull().default(0),
+    suggestEnergy: integer("suggest_energy").notNull().default(0),
+    speedupEnergy: integer("speedup_energy").notNull().default(0),
+    isTitanItem: boolean("is_titan_item").notNull().default(false),
   },
   (table) => ({
     nameIndex: unique("blueprints_name_idx").on(table.name),
     typeIndex: index("blueprints_type_idx").on(table.type),
+    subtypeIndex: index("blueprints_subtype_idx").on(table.subtype),
+    levelIndex: index("blueprints_level_idx").on(table.level),
     tierIndex: index("blueprints_tier_idx").on(table.tier),
+    subtierIndex: index("blueprints_subtier_idx").on(table.subtier),
+    experienceIndex: index("blueprints_experience_idx").on(table.experience),
+    craftExperienceIndex: index("blueprints_craft_experience_idx").on(
+      table.craftExperience,
+    ),
     valueIndex: index("blueprints_value_idx").on(table.value),
-    prerequisiteIndex: index("blueprints_prerequisite_idx").on(
-      table.prerequisite,
-    ),
-    researchScrollsIndex: index("blueprints_research_scrolls_idx").on(
-      table.researchScrolls,
-    ),
-    antiqueTokensIndex: index("blueprints_antique_tokens_idx").on(
-      table.antiqueTokens,
-    ),
-    craftingTimeSecondsIndex: index("blueprints_crafting_time_seconds_idx").on(
-      table.craftingTimeSeconds,
-    ),
-    merchantExperienceIndex: index("blueprints_merchant_experience_idx").on(
-      table.merchantExperience,
-    ),
-    workerExperienceIndex: index("blueprints_worker_experience_idx").on(
-      table.workerExperience,
-    ),
-    fusionExperienceIndex: index("blueprints_fusion_experience_idx").on(
-      table.fusionExperience,
-    ),
     favorIndex: index("blueprints_favor_idx").on(table.favor),
-    airshipPowerIndex: index("blueprints_airship_power_idx").on(
-      table.airshipPower,
-    ),
-    worker1Index: index("blueprints_worker_1_idx").on(table.worker1),
-    worker1LevelIndex: index("blueprints_worker_1_level_idx").on(
-      table.worker1Level,
-    ),
-    worker2Index: index("blueprints_worker_2_idx").on(table.worker2),
-    worker2LevelIndex: index("blueprints_worker_2_level_idx").on(
-      table.worker2Level,
-    ),
-    worker3Index: index("blueprints_worker_3_idx").on(table.worker3),
-    worker3LevelIndex: index("blueprints_worker_3_level_idx").on(
-      table.worker3Level,
-    ),
-    stoneIndex: index("blueprints_stone_idx").on(table.stone),
-    woodIndex: index("blueprints_wood_idx").on(table.wood),
-    leatherIndex: index("blueprints_leather_idx").on(table.leather),
-    herbIndex: index("blueprints_herb_idx").on(table.herb),
-    steelIndex: index("blueprints_steel_idx").on(table.steel),
-    ironwoodIndex: index("blueprints_ironwood_idx").on(table.ironwood),
-    fabricIndex: index("blueprints_fabric_idx").on(table.fabric),
-    oilIndex: index("blueprints_oil_idx").on(table.oil),
-    manaIndex: index("blueprints_mana_idx").on(table.mana),
-    gemsIndex: index("blueprints_gems_idx").on(table.gems),
-    essenceIndex: index("blueprints_essence_idx").on(table.essence),
-    blueprint1Index: index("blueprints_blueprint_1_idx").on(table.blueprint1),
-    component1Index: index("blueprints_component_1_idx").on(table.component1),
-    blueprint2Index: index("blueprints_blueprint_2_idx").on(table.blueprint2),
-    component2Index: index("blueprints_component_2_idx").on(table.component2),
-    attackIndex: index("blueprints_attack_idx").on(table.attack),
-    defenseIndex: index("blueprints_defense_idx").on(table.defense),
-    healthIndex: index("blueprints_health_idx").on(table.health),
+    timeIndex: index("blueprints_time_idx").on(table.time),
+    attackIndex: index("blueprints_atk_idx").on(table.attack),
+    defenceIndex: index("blueprints_def_idx").on(table.defence),
+    healthIndex: index("blueprints_hp_idx").on(table.health),
     evasionIndex: index("blueprints_evasion_idx").on(table.evasion),
     critIndex: index("blueprints_crit_idx").on(table.crit),
+    tradeMinMaxValueIndex: index("blueprints_trade_min_max_value_idx").on(
+      table.tradeMinValue,
+      table.tradeMaxValue,
+    ),
+    workerIndex: index("blueprints_workers_idx").on(
+      table.worker1,
+      table.worker1Level,
+      table.worker2,
+      table.worker2Level,
+      table.worker3,
+      table.worker3Level,
+    ),
+    resourceIndex: index("blueprints_resource_idx").on(
+      table.resource1,
+      table.resource1Qty,
+      table.resource2,
+      table.resource2Qty,
+      table.resource3,
+      table.resource3Qty,
+    ),
     elementIndex: index("blueprints_element_idx").on(table.element),
     spiritIndex: index("blueprints_spirit_idx").on(table.spirit),
+    discountEnergyIndex: index("blueprints_discount_energy_idx").on(
+      table.discountEnergy,
+    ),
+    surchargeEnergyIndex: index("blueprints_surcharge_energy_idx").on(
+      table.surchargeEnergy,
+    ),
+    suggestEnergyIndex: index("blueprints_suggest_energy_idx").on(
+      table.suggestEnergy,
+    ),
+    speedupEnergyIndex: index("blueprints_speedup_energy_idx").on(
+      table.speedupEnergy,
+    ),
   }),
 );

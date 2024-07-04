@@ -1,11 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRightIcon, ExternalLinkIcon, MenuIcon } from "lucide-react";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import HeroBackground from "~/../public/images/hero_academia_background.png";
 import { logout } from "~/auth/utils";
 import { Button } from "~/components/ui/button";
@@ -15,23 +18,6 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "~/components/ui/navigation-menu";
-import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
-import { cn } from "~/lib/utils";
-import { type User } from "~/types";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -40,8 +26,49 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/ui/form";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "~/components/ui/navigation-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
+import { cn } from "~/lib/utils";
+import { type User } from "~/types";
+import importSpreadsheet from "../_actions/import-spreadsheet";
+import { importFormSchema } from "../_lib/import-schema";
+import { enableMarketImport } from "~/server/flags";
 
-export function DesktopNavigation({ user }: { user: User | null }) {
+export function DesktopNavigation({
+  user,
+  marketImportEnabled,
+}: {
+  user: User | null;
+  marketImportEnabled: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -58,13 +85,8 @@ export function DesktopNavigation({ user }: { user: User | null }) {
     [pathname],
   );
 
-  const isLiveMarketPage = React.useMemo(
-    () => isRouteActive(pathname, "/market/live"),
-    [pathname],
-  );
-
-  const isMarketHistoryPage = React.useMemo(
-    () => isRouteActive(pathname, "/market/history"),
+  const isMarketPage = React.useMemo(
+    () => isRouteActive(pathname, "/market"),
     [pathname],
   );
 
@@ -157,40 +179,51 @@ export function DesktopNavigation({ user }: { user: User | null }) {
             </NavigationMenuContent>
           </NavigationMenuItem>
 
-          <NavigationMenuItem>
-            <NavigationMenuTrigger
-              className={cn({
-                "bg-transparent hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent":
-                  true,
-                "text-muted-foreground":
-                  !isLiveMarketPage && !isMarketHistoryPage,
-                "text-accent-foreground":
-                  isLiveMarketPage || isMarketHistoryPage,
-              })}
-            >
-              Market
-            </NavigationMenuTrigger>
+          {marketImportEnabled && (
+            <NavigationMenuItem>
+              <NavigationMenuTrigger
+                className={cn({
+                  "bg-transparent hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent":
+                    true,
+                  "text-muted-foreground": !isMarketPage,
+                  "text-accent-foreground": isMarketPage,
+                })}
+              >
+                Market
+              </NavigationMenuTrigger>
 
-            <NavigationMenuContent>
-              <ul className="grid w-[400px] p-2">
-                <DesktopListItem
-                  href="/"
-                  title="Live Market"
-                  active={isLiveMarketPage}
-                >
-                  View the current prices of the market.
-                </DesktopListItem>
+              <NavigationMenuContent>
+                <ul className="grid w-[400px] p-2">
+                  <DesktopListItem
+                    href="/market"
+                    title="Live Market"
+                    active={isMarketPage}
+                  >
+                    View market items and prices
+                  </DesktopListItem>
 
-                <DesktopListItem
-                  href="/history"
-                  title="Market History"
-                  active={isMarketHistoryPage}
-                >
-                  View historical data of the market.
-                </DesktopListItem>
-              </ul>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+                  <SpreadsheetImporter />
+                </ul>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          )}
+
+          {!marketImportEnabled && (
+            <NavigationMenuLink asChild>
+              <Button
+                variant="link"
+                className={cn({
+                  "hover:text-accent-foreground hover:no-underline focus:text-accent-foreground":
+                    true,
+                  "text-muted-foreground": !isMarketPage,
+                  "text-accent-foreground": isMarketPage,
+                })}
+                asChild
+              >
+                <Link href="/market">Market</Link>
+              </Button>
+            </NavigationMenuLink>
+          )}
 
           <NavigationMenuItem>
             <NavigationMenuTrigger
@@ -407,6 +440,24 @@ export function MobileNavigation() {
 }
 
 function SpreadsheetImporter() {
+  async function handleImport() {
+    const toastId = toast.loading(`Importing data...`);
+
+    try {
+      if (!(await importSpreadsheet())) {
+        throw new Error();
+      }
+
+      toast.success("Successfully imported data.", {
+        id: toastId,
+      });
+    } catch {
+      toast.error("Failed to import data.", {
+        id: toastId,
+      });
+    }
+  }
+
   return (
     <li>
       <Dialog>
@@ -426,27 +477,23 @@ function SpreadsheetImporter() {
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit profile</DialogTitle>
+            <DialogTitle>Import Data</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re
-              done.
+              Automatically import data from the spreadsheet.
             </DialogDescription>
           </DialogHeader>
 
-          <form
-            id="market-data-import-form"
-            onSubmit={(event: React.FormEvent) => {
-              toast.success("hello world");
-              console.log("yes");
+          <p className="text-sm">
+            Are you sure you want to import all data from the spreadsheet?
+          </p>
 
-              event.preventDefault();
-            }}
-          ></form>
+          <p className="text-sm text-destructive">
+            <span className="font-medium">Note:</span> Images will need
+            uploading separately.
+          </p>
 
           <DialogFooter>
-            <Button type="submit" form="market-data-import-form">
-              Save changes
-            </Button>
+            <Button onClick={async () => await handleImport()}>Import</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
