@@ -5,7 +5,10 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  InitialTableState,
+  OnChangeFn,
   useReactTable,
+  VisibilityState,
   type ColumnDef,
   type PaginationState,
   type SortingState,
@@ -13,18 +16,22 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { z } from "zod";
+import useParsedSearchParams from "./use-parsed-search-params";
 
 interface UseDataTableProps<TData, TValue> {
   data: TData[];
   columns: ColumnDef<TData, TValue>[];
   defaultPerPage?: number;
   defaultSort?: `${Extract<keyof TData, string | number>}.${"asc" | "desc"}`;
+  initialState?: InitialTableState;
+  columnVisibility?: VisibilityState;
+  setColumnVisibility?: OnChangeFn<VisibilityState>;
 }
 
-const schema = z.object({
+const searchParamsSchema = z.object({
   page: z.coerce.number().default(1),
   perPage: z.coerce.number().optional(),
-  sort: z.string().optional(),
+  sort: z.string().or(z.array(z.string())).optional(),
 });
 
 export default function useDataTable<TData, TValue>({
@@ -32,26 +39,30 @@ export default function useDataTable<TData, TValue>({
   columns,
   defaultPerPage = 10,
   defaultSort,
+  columnVisibility,
+  setColumnVisibility,
 }: UseDataTableProps<TData, TValue>) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const parsedSearchParams = useParsedSearchParams(searchParamsSchema);
 
-  // Search params
-  const search = schema.parse(Object.fromEntries(searchParams));
-  const page = search.page;
-  const perPage = search.perPage ?? defaultPerPage;
-  const sort = search.sort ?? defaultSort;
-  const [column, order] = sort?.split(".") ?? [];
+  const page = parsedSearchParams.page;
+  const perPage = parsedSearchParams.perPage ?? defaultPerPage;
 
-  // Create query string
   const createQueryString = React.useCallback(
-    (params: Record<string, string | number | null>) => {
-      const newSearchParams = new URLSearchParams(searchParams?.toString());
+    (params: Record<string, unknown>) => {
+      const newSearchParams = new URLSearchParams(searchParams);
 
       for (const [key, value] of Object.entries(params)) {
-        if (value === null) {
+        if (value === null || typeof value === "undefined") {
           newSearchParams.delete(key);
+        } else if (Array.isArray(value)) {
+          newSearchParams.delete(key);
+
+          for (const v of value) {
+            newSearchParams.append(key, String(v));
+          }
         } else {
           newSearchParams.set(key, String(value));
         }
@@ -63,17 +74,14 @@ export default function useDataTable<TData, TValue>({
   );
 
   const [pagination, setPagination] = React.useState<PaginationState>({
-    pageIndex: page - 1,
-    pageSize: perPage,
+    pageIndex: Math.max(page - 1, 0),
+    pageSize: perPage ?? defaultPerPage,
   });
 
-  // Handle server-side sorting
-  const [sorting, setSorting] = React.useState<SortingState>([
-    {
-      id: column ?? "",
-      desc: order === "desc",
-    },
-  ]);
+  const sortedColumns = getSortedColumns(
+    parsedSearchParams.sort ?? defaultSort,
+  );
+  const [sorting, setSorting] = React.useState<SortingState>(sortedColumns);
 
   React.useEffect(() => {
     setPagination({
@@ -87,9 +95,13 @@ export default function useDataTable<TData, TValue>({
       `${pathname}?${createQueryString({
         page: pagination.pageIndex + 1,
         perPage: pagination.pageSize,
-        sort: sorting[0]?.id
-          ? `${sorting[0]?.id}.${sorting[0]?.desc ? "desc" : "asc"}`
-          : null,
+        sort: sorting
+          .map((sort) => {
+            return sort?.id
+              ? `${sort?.id}.${sort?.desc ? "desc" : "asc"}`
+              : null;
+          })
+          .filter((x) => x !== null) as string[],
       })}`,
       {
         scroll: false,
@@ -106,6 +118,7 @@ export default function useDataTable<TData, TValue>({
     state: {
       pagination,
       sorting,
+      columnVisibility,
     },
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
@@ -114,7 +127,37 @@ export default function useDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     autoResetPageIndex: false,
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return { table };
+}
+
+function getSortedColumns(columns: string | string[] | undefined) {
+  if (!columns) {
+    return [
+      {
+        id: "",
+        desc: false,
+      },
+    ];
+  }
+
+  if (Array.isArray(columns)) {
+    return columns.map((column) => {
+      const [id, desc] = column.split(".");
+      return {
+        id: id ?? "",
+        desc: desc === "desc",
+      };
+    });
+  }
+
+  const [id, desc] = columns.split(".");
+  return [
+    {
+      id: id ?? "",
+      desc: desc === "desc",
+    },
+  ];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { InferSelectModel } from "drizzle-orm";
 import * as React from "react";
 import Avatar from "~/components/ui/avatar";
@@ -16,11 +16,13 @@ import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { Input } from "~/components/ui/input";
 
 const columns: ColumnDef<InferSelectModel<typeof blueprints>>[] = [
   {
@@ -117,12 +119,32 @@ export default function MarketTable({
 }) {
   const data = React.use(dataLoader);
 
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+
   const { table } = useDataTable({
     data,
     columns,
     defaultPerPage: 10,
     defaultSort: "name.asc",
+    columnVisibility,
+    setColumnVisibility,
   });
 
-  return <DataTable table={table}></DataTable>;
+  return (
+    <>
+      <div className="flex items-center p-4">
+        <Input
+          placeholder="Filter by names..."
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("name")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+      </div>
+
+      <DataTable table={table}></DataTable>
+    </>
+  );
 }

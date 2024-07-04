@@ -21,7 +21,13 @@ export default async function MarketPage() {
 
         <div className="container relative mx-auto">
           <div className="w-full rounded-lg border bg-background shadow-xl">
-            <React.Suspense fallback={<DataTableSkeleton columnCount={5} />}>
+            <React.Suspense
+              fallback={
+                <div className="w-full rounded-lg border bg-background shadow-xl">
+                  <DataTableSkeleton columnCount={5} />
+                </div>
+              }
+            >
               <MarketTable dataLoader={dataLoader} />
             </React.Suspense>
           </div>

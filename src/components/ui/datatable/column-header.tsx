@@ -5,16 +5,20 @@ import {
   EyeNoneIcon,
 } from "@radix-ui/react-icons";
 import { type Column } from "@tanstack/react-table";
+import { ListRestart, Minus, Undo } from "lucide-react";
 
-import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { cn } from "~/lib/utils";
 
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -45,7 +49,7 @@ export function DataTableColumnHeader<TData, TValue>({
             }
             variant="ghost"
             size="sm"
-            className="-ml-3 h-8 data-[state=open]:bg-accent"
+            className="-ml-3 h-8 px-4 py-0 font-semibold hover:bg-muted/40 data-[state=open]:bg-muted/40 lg:py-4"
           >
             <span>{title}</span>
             {column.getCanSort() && column.getIsSorted() === "desc" ? (
@@ -60,42 +64,61 @@ export function DataTableColumnHeader<TData, TValue>({
         <DropdownMenuContent align="start">
           {column.getCanSort() && (
             <>
-              <DropdownMenuItem
-                aria-label="Sort ascending"
-                onClick={() => column.toggleSorting(false)}
+              <DropdownMenuLabel>Sorting</DropdownMenuLabel>
+
+              <DropdownMenuRadioGroup
+                value={
+                  column.getIsSorted() ? (column.getIsSorted() as string) : ""
+                }
               >
-                <ArrowUpIcon
-                  className="mr-2 size-3.5 text-muted-foreground/70"
-                  aria-hidden="true"
-                />
-                Asc
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                aria-label="Sort descending"
-                onClick={() => column.toggleSorting(true)}
-              >
-                <ArrowDownIcon
-                  className="mr-2 size-3.5 text-muted-foreground/70"
-                  aria-hidden="true"
-                />
-                Desc
-              </DropdownMenuItem>
+                <DropdownMenuRadioItem
+                  value="asc"
+                  aria-label="Sort ascending"
+                  onClick={() =>
+                    column.getIsSorted() !== "asc"
+                      ? column.toggleSorting(false, column.getCanMultiSort())
+                      : column.clearSorting()
+                  }
+                >
+                  <ArrowUpIcon
+                    className="mr-2 size-3.5 text-muted-foreground/70"
+                    aria-hidden="true"
+                  />
+                  Ascending
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem
+                  value="desc"
+                  aria-label="Sort descending"
+                  onClick={() =>
+                    column.getIsSorted() !== "desc"
+                      ? column.toggleSorting(true, column.getCanMultiSort())
+                      : column.clearSorting()
+                  }
+                >
+                  <ArrowDownIcon
+                    className="mr-2 size-3.5 text-muted-foreground/70"
+                    aria-hidden="true"
+                  />
+                  Descending
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
             </>
           )}
-          {column.getCanSort() && column.getCanHide() && (
-            <DropdownMenuSeparator />
-          )}
-          {column.getCanHide() && (
-            <DropdownMenuItem
-              aria-label="Hide column"
-              onClick={() => column.toggleVisibility(false)}
-            >
-              <EyeNoneIcon
-                className="mr-2 size-3.5 text-muted-foreground/70"
-                aria-hidden="true"
-              />
-              Hide
-            </DropdownMenuItem>
+          {column.getIsSorted() && (
+            <>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                aria-label="Reset column"
+                onClick={() => column.clearSorting()}
+              >
+                <ListRestart
+                  className="mr-2 size-3.5 text-muted-foreground/70"
+                  aria-hidden="true"
+                />
+                Reset column
+              </DropdownMenuItem>
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
