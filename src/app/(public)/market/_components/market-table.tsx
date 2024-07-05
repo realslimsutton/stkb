@@ -1,19 +1,25 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { Column, ColumnDef, Table } from "@tanstack/react-table";
 import { InferSelectModel } from "drizzle-orm";
 import * as React from "react";
 import Avatar from "~/components/ui/avatar";
 import { DataTable } from "~/components/ui/datatable";
 import useDataTable from "~/hooks/use-data-table";
-import { formatDuration, formatNumber } from "~/lib/formatter";
+import {
+  capitalise,
+  formatArray,
+  formatDuration,
+  formatNumber,
+} from "~/lib/formatter";
 import { blueprints } from "~/server/db/schema";
 import { blueprintCategories, blueprintTypes } from "~/shop-titans/data/enums";
 import { DataTableColumnHeader } from "../../../../components/ui/datatable/column-header";
 
-import { ExternalLinkIcon, MoreHorizontal } from "lucide-react";
+import { ExternalLinkIcon, MoreHorizontal, XCircleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -38,9 +44,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { capitalise } from "~/lib/utils";
+import { z } from "zod";
+import {
+  ReadonlyURLSearchParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { createQueryString } from "~/lib/utils";
+import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 
-const columns: ColumnDef<InferSelectModel<typeof blueprints>>[] = [
+type Record = InferSelectModel<typeof blueprints>;
+
+const columns: ColumnDef<Record>[] = [
   {
     accessorKey: "image",
     header: () => null,
@@ -161,11 +177,24 @@ const columns: ColumnDef<InferSelectModel<typeof blueprints>>[] = [
   },
 ];
 
+const searchParamsSchema = z.object({
+  search: z.string().optional(),
+  tiers: z.array(z.string()).optional().catch([]),
+  types: z.array(z.string()).optional().catch([]),
+  categories: z.array(z.string()).optional().catch([]),
+});
+
 export default function MarketTable({
   dataLoader,
 }: {
   dataLoader: Promise<InferSelectModel<typeof blueprints>[]>;
 }) {
+  const searchParams = useSearchParams();
+  const parsedSearchParams = useParsedSearchParams(
+    searchParams,
+    searchParamsSchema,
+  );
+
   const data = React.use(dataLoader);
 
   const tierFilterOptions = React.useMemo(
@@ -193,12 +222,39 @@ export default function MarketTable({
     }));
   }, [blueprintCategories]);
 
+  const [search, setSearch] = React.useState(parsedSearchParams.search ?? "");
+  const [tiers, setTiers] = React.useState(parsedSearchParams.tiers ?? []);
+  const [types, setTypes] = React.useState(parsedSearchParams.types ?? []);
+  const [categories, setCategories] = React.useState(
+    parsedSearchParams.categories ?? [],
+  );
+
   const { table } = useDataTable({
     data,
     columns,
     defaultPerPage: 10,
     columnVisibility: {
       category: false,
+    },
+    initialState: {
+      columnFilters: [
+        {
+          id: "tier",
+          value: tiers,
+        },
+        {
+          id: "type",
+          value: types,
+        },
+        {
+          id: "category",
+          value: categories,
+        },
+        {
+          id: "name",
+          value: search,
+        },
+      ],
     },
   });
 
@@ -211,15 +267,31 @@ export default function MarketTable({
     };
   }, [table]);
 
+  React.useEffect(() => {
+    filterableColumns.name.setFilterValue(search);
+  }, [filterableColumns, search]);
+
+  React.useEffect(() => {
+    filterableColumns.tier.setFilterValue(tiers);
+  }, [filterableColumns, tiers]);
+
+  React.useEffect(() => {
+    filterableColumns.type.setFilterValue(types);
+  }, [filterableColumns, types]);
+
+  React.useEffect(() => {
+    filterableColumns.category.setFilterValue(categories);
+  }, [filterableColumns, categories]);
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-4 p-4">
         <Input
           placeholder="Filter by names..."
-          value={(filterableColumns.name.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            filterableColumns.name.setFilterValue(event.target.value)
-          }
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+          }}
           className="max-w-sm"
         />
 
@@ -234,8 +306,9 @@ export default function MarketTable({
                 <Label className="space-y-2">
                   <span>Tiers</span>
                   <MultiSelect
+                    value={tiers}
                     onValueChange={(value) => {
-                      table.getColumn("tier")?.setFilterValue(value);
+                      setTiers(value);
                     }}
                   >
                     <MultiSelectTrigger>
@@ -264,8 +337,9 @@ export default function MarketTable({
                 <Label className="space-y-2">
                   <span>Types</span>
                   <MultiSelect
+                    value={types}
                     onValueChange={(value) => {
-                      filterableColumns.type.setFilterValue(value);
+                      setTypes(value);
                     }}
                   >
                     <MultiSelectTrigger>
@@ -294,8 +368,9 @@ export default function MarketTable({
                 <Label className="space-y-2">
                   <span>Category</span>
                   <MultiSelect
+                    value={categories}
                     onValueChange={(value) => {
-                      filterableColumns.category.setFilterValue(value);
+                      setCategories(value);
                     }}
                   >
                     <MultiSelectTrigger>
@@ -324,7 +399,122 @@ export default function MarketTable({
         </div>
       </div>
 
+      <TableFilterStatus
+        search={search}
+        setSearch={setSearch}
+        tiers={tiers}
+        setTiers={setTiers}
+        types={types}
+        setTypes={setTypes}
+        categories={categories}
+        setCategories={setCategories}
+        searchParams={searchParams}
+      />
+
       <DataTable table={table}></DataTable>
     </>
+  );
+}
+
+function TableFilterStatus({
+  search,
+  setSearch,
+  tiers,
+  setTiers,
+  types,
+  setTypes,
+  categories,
+  setCategories,
+  searchParams,
+}: {
+  search: string;
+  setSearch: (value: string) => void;
+  tiers: string[];
+  setTiers: (value: string[]) => void;
+  types: string[];
+  setTypes: (value: string[]) => void;
+  categories: string[];
+  setCategories: (value: string[]) => void;
+  searchParams: ReadonlyURLSearchParams;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const filterByName = React.useMemo(() => Boolean(search.length), [search]);
+  const filterByTier = React.useMemo(() => Boolean(tiers.length), [tiers]);
+  const filterByType = React.useMemo(() => Boolean(types.length), [types]);
+  const filterByCategory = React.useMemo(
+    () => Boolean(categories?.length),
+    [categories],
+  );
+
+  React.useEffect(() => {
+    router.push(
+      `${pathname}?${createQueryString(
+        {
+          search: search,
+          tiers: tiers,
+          types: types,
+          categories: categories,
+        },
+        searchParams,
+      )}`,
+      {
+        scroll: false,
+      },
+    );
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, tiers, types, categories]);
+
+  if (!filterByName && !filterByTier && !filterByType && !filterByCategory) {
+    return null;
+  }
+
+  return (
+    <div className="border-t border-border px-6 py-4">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">Active filters:</span>
+
+        <div className="flex items-center gap-2">
+          {filterByName && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setSearch("")}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              Search: {search}
+            </Badge>
+          )}
+          {filterByTier && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setTiers([])}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              Tiers: {formatArray(tiers)}
+            </Badge>
+          )}
+          {filterByType && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setTypes([])}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              Types: {formatArray(types)}
+            </Badge>
+          )}
+          {filterByCategory && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setCategories([])}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              <span>Categories: {formatArray(categories)}</span>
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

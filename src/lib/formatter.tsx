@@ -73,3 +73,22 @@ export function formatDuration(duration: number) {
 
   return result.join(" ");
 }
+
+export function capitalise(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+
+export function formatArray(value: string[], count = 3): string {
+  if (value.length === 0) {
+    return "";
+  }
+
+  if (value.length <= count) {
+    return value.join(", ");
+  }
+
+  const displayedItems = value.slice(0, count).join(", ");
+  const remainingCount = value.length - count;
+
+  return `${displayedItems} & ${remainingCount} more`;
+}

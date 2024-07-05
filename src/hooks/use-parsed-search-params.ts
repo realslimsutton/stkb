@@ -1,11 +1,10 @@
-import { useSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import { type z } from "zod";
 
 export default function useParsedSearchParams<T extends z.ZodRawShape>(
+  searchParams: ReadonlyURLSearchParams,
   schema: z.ZodObject<T>,
 ) {
-  const searchParams = useSearchParams();
-
   const data = new Map();
 
   for (const key of searchParams.keys()) {

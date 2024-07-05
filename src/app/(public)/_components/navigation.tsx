@@ -189,7 +189,7 @@ export function DesktopNavigation({
           )}
 
           {!marketImportEnabled && (
-            <NavigationMenuLink asChild>
+            <NavigationMenuItem>
               <Button
                 variant="link"
                 className={cn({
@@ -202,7 +202,7 @@ export function DesktopNavigation({
               >
                 <Link href="/market">Market</Link>
               </Button>
-            </NavigationMenuLink>
+            </NavigationMenuItem>
           )}
 
           <NavigationMenuItem>
@@ -248,7 +248,7 @@ export function DesktopNavigation({
             </NavigationMenuContent>
           </NavigationMenuItem>
 
-          <NavigationMenuLink asChild>
+          <NavigationMenuItem>
             <Button
               variant="link"
               className={cn({
@@ -261,7 +261,7 @@ export function DesktopNavigation({
             >
               <Link href="/contact">Contact</Link>
             </Button>
-          </NavigationMenuLink>
+          </NavigationMenuItem>
 
           {user && (
             <NavigationMenuItem>

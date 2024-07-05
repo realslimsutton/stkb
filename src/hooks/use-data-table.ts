@@ -17,6 +17,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { z } from "zod";
 import useParsedSearchParams from "./use-parsed-search-params";
+import { createQueryString } from "~/lib/utils";
 
 interface UseDataTableProps<TData, TValue> {
   data: TData[];
@@ -29,9 +30,9 @@ interface UseDataTableProps<TData, TValue> {
 }
 
 const searchParamsSchema = z.object({
-  page: z.coerce.number().default(1),
-  perPage: z.coerce.number().optional(),
-  sort: z.string().or(z.array(z.string())).optional(),
+  page: z.coerce.number().default(1).catch(1),
+  perPage: z.coerce.number().optional().catch(10),
+  sort: z.string().or(z.array(z.string())).optional().catch(undefined),
 });
 
 export default function useDataTable<TData, TValue>({
@@ -45,33 +46,13 @@ export default function useDataTable<TData, TValue>({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const parsedSearchParams = useParsedSearchParams(searchParamsSchema);
+  const parsedSearchParams = useParsedSearchParams(
+    searchParams,
+    searchParamsSchema,
+  );
 
   const page = parsedSearchParams.page;
   const perPage = parsedSearchParams.perPage ?? defaultPerPage;
-
-  const createQueryString = React.useCallback(
-    (params: Record<string, unknown>) => {
-      const newSearchParams = new URLSearchParams(searchParams);
-
-      for (const [key, value] of Object.entries(params)) {
-        if (value === null || typeof value === "undefined") {
-          newSearchParams.delete(key);
-        } else if (Array.isArray(value)) {
-          newSearchParams.delete(key);
-
-          for (const v of value) {
-            newSearchParams.append(key, String(v));
-          }
-        } else {
-          newSearchParams.set(key, String(value));
-        }
-      }
-
-      return newSearchParams.toString();
-    },
-    [searchParams],
-  );
 
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: Math.max(page - 1, 0),
@@ -92,17 +73,20 @@ export default function useDataTable<TData, TValue>({
 
   React.useEffect(() => {
     router.push(
-      `${pathname}?${createQueryString({
-        page: pagination.pageIndex + 1,
-        perPage: pagination.pageSize,
-        sort: sorting
-          .map((sort) => {
-            return sort?.id
-              ? `${sort?.id}.${sort?.desc ? "desc" : "asc"}`
-              : null;
-          })
-          .filter((x) => x !== null) as string[],
-      })}`,
+      `${pathname}?${createQueryString(
+        {
+          page: pagination.pageIndex + 1,
+          perPage: pagination.pageSize,
+          sort: sorting
+            .map((sort) => {
+              return sort?.id
+                ? `${sort?.id}.${sort?.desc ? "desc" : "asc"}`
+                : null;
+            })
+            .filter((x) => x !== null) as string[],
+        },
+        searchParams,
+      )}`,
       {
         scroll: false,
       },
