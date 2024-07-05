@@ -285,20 +285,22 @@ export default function MarketTable({
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4">
-        <Input
-          placeholder="Filter by names..."
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-          }}
-          className="max-w-sm"
-        />
-
+      <div className="grid gap-4 p-4 sm:grid-cols-2">
         <div>
+          <Input
+            placeholder="Filter by names..."
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+            }}
+            className="max-w-sm"
+          />
+        </div>
+
+        <div className="flex items-center justify-end">
           <Popover>
             <PopoverTrigger asChild>
-              <Button>Filters</Button>
+              <Button className="w-full sm:w-auto">Filters</Button>
             </PopoverTrigger>
 
             <PopoverContent align="end" className="w-80 space-y-4">
