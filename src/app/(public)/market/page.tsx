@@ -3,13 +3,17 @@ import { db } from "~/server/db";
 import PageHeader from "../_components/page-header";
 import MarketTable from "./_components/market-table";
 import { DataTableSkeleton } from "~/components/ui/datatable/skeleton";
+import { desc } from "drizzle-orm";
+import { blueprints } from "~/server/db/schema";
 
 export const metadata = {
   title: "Market | Shop Titans Knowledge Base",
 };
 
 export default async function MarketPage() {
-  const dataLoader = db.query.blueprints.findMany();
+  const dataLoader = db.query.blueprints.findMany({
+    orderBy: desc(blueprints.tier),
+  });
 
   return (
     <>

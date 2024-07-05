@@ -5,36 +5,8 @@ import { InferSelectModel, sql } from "drizzle-orm";
 import { db } from "~/server/db";
 import { blueprints as blueprintsSchema } from "~/server/db/schema";
 import { enableMarketImport } from "~/server/flags";
+import { blueprintCategories } from "~/shop-titans/data/enums";
 import { Blueprint } from "~/shop-titans/types";
-
-const blueprintUrlPaths = {
-  weapons: ["ws", "wa", "wd", "wm", "wp", "wb", "ww", "wt", "wg", "wc", "wi"],
-  armor: ["ah", "am", "al", "hh", "hm", "hl", "gh", "gl", "bh", "bl"],
-  accessories: [
-    "uh",
-    "up",
-    "us",
-    "xs",
-    "xr",
-    "xa",
-    "xc",
-    "xf",
-    "xx",
-    "fm",
-    "fd",
-  ],
-  stones: ["xu", "xm"],
-  enchantments: [
-    "fire",
-    "water",
-    "earth",
-    "air",
-    "light",
-    "dark",
-    "gold",
-    "spirit",
-  ],
-};
 
 export default async function importSpreadsheet() {
   const marketImportEnabled = await enableMarketImport();
@@ -48,8 +20,8 @@ export default async function importSpreadsheet() {
 
   try {
     const response = await Promise.all(
-      Object.keys(blueprintUrlPaths).map((category) =>
-        importBlueprintCategory(category as keyof typeof blueprintUrlPaths),
+      Object.keys(blueprintCategories).map((category) =>
+        importBlueprintCategory(category as keyof typeof blueprintCategories),
       ),
     );
 
@@ -85,10 +57,10 @@ async function deleteBlueprintImages() {
 }
 
 async function importBlueprintCategory(
-  category: keyof typeof blueprintUrlPaths,
+  category: keyof typeof blueprintCategories,
 ) {
   const allBlueprints = await Promise.all(
-    blueprintUrlPaths[category]!.map((type) => getBlueprints(category, type)),
+    blueprintCategories[category]!.map((type) => getBlueprints(category, type)),
   );
 
   const allItems = [];
@@ -310,7 +282,7 @@ async function importBlueprintCategory(
 }
 
 async function getBlueprints(
-  category: keyof typeof blueprintUrlPaths,
+  category: keyof typeof blueprintCategories,
   type: string,
 ): Promise<
   [Map<string, string>, (Blueprint & { category: string })[]] | [null, null]

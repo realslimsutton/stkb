@@ -135,12 +135,7 @@ export default function useDataTable<TData, TValue>({
 
 function getSortedColumns(columns: string | string[] | undefined) {
   if (!columns) {
-    return [
-      {
-        id: "",
-        desc: false,
-      },
-    ];
+    return [];
   }
 
   if (Array.isArray(columns)) {

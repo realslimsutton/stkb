@@ -1,3 +1,32 @@
+export const blueprintCategories = {
+  weapons: ["ws", "wa", "wd", "wm", "wp", "wb", "ww", "wt", "wg", "wc", "wi"],
+  armor: ["ah", "am", "al", "hh", "hm", "hl", "gh", "gl", "bh", "bl"],
+  accessories: [
+    "uh",
+    "up",
+    "us",
+    "xs",
+    "xr",
+    "xa",
+    "xc",
+    "xf",
+    "xx",
+    "fm",
+    "fd",
+  ],
+  stones: ["xu", "xm"],
+  enchantments: [
+    "fire",
+    "water",
+    "earth",
+    "air",
+    "light",
+    "dark",
+    "gold",
+    "spirit",
+  ],
+};
+
 export const blueprintTypes = {
   // Weapons
   ws: "Sword",
