@@ -53,6 +53,15 @@ import {
 } from "next/navigation";
 import { createQueryString } from "~/lib/utils";
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
+import { useMediaQuery } from "usehooks-ts";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "~/components/ui/drawer";
 
 type Record = InferSelectModel<typeof blueprints>;
 
@@ -293,111 +302,22 @@ export default function MarketTable({
             onChange={(event) => {
               setSearch(event.target.value);
             }}
-            className="max-w-sm"
+            className="sm:max-w-sm"
           />
         </div>
 
         <div className="flex items-center justify-end">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button className="w-full sm:w-auto">Filters</Button>
-            </PopoverTrigger>
-
-            <PopoverContent align="end" className="w-80 space-y-4">
-              <div>
-                <Label className="space-y-2">
-                  <span>Tiers</span>
-                  <MultiSelect
-                    value={tiers}
-                    onValueChange={(value) => {
-                      setTiers(value);
-                    }}
-                  >
-                    <MultiSelectTrigger>
-                      <MultiSelectValue placeholder="Select stack" />
-                    </MultiSelectTrigger>
-
-                    <MultiSelectContent>
-                      <MultiSelectSearch />
-
-                      <MultiSelectList>
-                        {tierFilterOptions.map((option) => (
-                          <MultiSelectItem
-                            key={option.value}
-                            value={option.value}
-                          >
-                            {option.label}
-                          </MultiSelectItem>
-                        ))}
-                      </MultiSelectList>
-                    </MultiSelectContent>
-                  </MultiSelect>
-                </Label>
-              </div>
-
-              <div>
-                <Label className="space-y-2">
-                  <span>Types</span>
-                  <MultiSelect
-                    value={types}
-                    onValueChange={(value) => {
-                      setTypes(value);
-                    }}
-                  >
-                    <MultiSelectTrigger>
-                      <MultiSelectValue placeholder="Select stack" />
-                    </MultiSelectTrigger>
-
-                    <MultiSelectContent>
-                      <MultiSelectSearch />
-
-                      <MultiSelectList>
-                        {typeFilterOptions.map((option) => (
-                          <MultiSelectItem
-                            key={option.value}
-                            value={option.value}
-                          >
-                            {option.label}
-                          </MultiSelectItem>
-                        ))}
-                      </MultiSelectList>
-                    </MultiSelectContent>
-                  </MultiSelect>
-                </Label>
-              </div>
-
-              <div>
-                <Label className="space-y-2">
-                  <span>Category</span>
-                  <MultiSelect
-                    value={categories}
-                    onValueChange={(value) => {
-                      setCategories(value);
-                    }}
-                  >
-                    <MultiSelectTrigger>
-                      <MultiSelectValue placeholder="Select stack" />
-                    </MultiSelectTrigger>
-
-                    <MultiSelectContent>
-                      <MultiSelectSearch />
-
-                      <MultiSelectList>
-                        {categoryFilterOptions.map((option) => (
-                          <MultiSelectItem
-                            key={option.value}
-                            value={option.value}
-                          >
-                            {option.label}
-                          </MultiSelectItem>
-                        ))}
-                      </MultiSelectList>
-                    </MultiSelectContent>
-                  </MultiSelect>
-                </Label>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <TableFiltersWrapper
+            tierFilterOptions={tierFilterOptions}
+            tiers={tiers}
+            setTiers={setTiers}
+            typeFilterOptions={typeFilterOptions}
+            types={types}
+            setTypes={setTypes}
+            categoryFilterOptions={categoryFilterOptions}
+            categories={categories}
+            setCategories={setCategories}
+          />
         </div>
       </div>
 
@@ -415,6 +335,190 @@ export default function MarketTable({
 
       <DataTable table={table}></DataTable>
     </>
+  );
+}
+
+function TableFiltersWrapper({
+  tierFilterOptions,
+  tiers,
+  setTiers,
+  typeFilterOptions,
+  types,
+  setTypes,
+  categoryFilterOptions,
+  categories,
+  setCategories,
+}: {
+  tierFilterOptions: { value: string; label: string }[];
+  tiers: string[];
+  setTiers: (value: string[]) => void;
+  typeFilterOptions: { value: string; label: string }[];
+  types: string[];
+  setTypes: (value: string[]) => void;
+  categoryFilterOptions: { value: string; label: string }[];
+  categories: string[];
+  setCategories: (value: string[]) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  if (isDesktop) {
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button className="w-full sm:w-auto">Filters</Button>
+        </PopoverTrigger>
+
+        <PopoverContent align="end" className="w-80">
+          <TableFilters
+            tierFilterOptions={tierFilterOptions}
+            tiers={tiers}
+            setTiers={setTiers}
+            typeFilterOptions={typeFilterOptions}
+            types={types}
+            setTypes={setTypes}
+            categoryFilterOptions={categoryFilterOptions}
+            categories={categories}
+            setCategories={setCategories}
+          />
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button className="w-full sm:w-auto">Filters</Button>
+      </DrawerTrigger>
+      <DrawerContent className="px-4 pb-6">
+        <TableFilters
+          tierFilterOptions={tierFilterOptions}
+          tiers={tiers}
+          setTiers={setTiers}
+          typeFilterOptions={typeFilterOptions}
+          types={types}
+          setTypes={setTypes}
+          categoryFilterOptions={categoryFilterOptions}
+          categories={categories}
+          setCategories={setCategories}
+        />
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+export function TableFilters({
+  tierFilterOptions,
+  tiers,
+  setTiers,
+  typeFilterOptions,
+  types,
+  setTypes,
+  categoryFilterOptions,
+  categories,
+  setCategories,
+}: {
+  tierFilterOptions: { value: string; label: string }[];
+  tiers: string[];
+  setTiers: (value: string[]) => void;
+  typeFilterOptions: { value: string; label: string }[];
+  types: string[];
+  setTypes: (value: string[]) => void;
+  categoryFilterOptions: { value: string; label: string }[];
+  categories: string[];
+  setCategories: (value: string[]) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label className="space-y-2">
+          <span>Tiers</span>
+
+          <MultiSelect
+            value={tiers}
+            onValueChange={(value) => {
+              setTiers(value);
+            }}
+          >
+            <MultiSelectTrigger>
+              <MultiSelectValue placeholder="Select tiers" />
+            </MultiSelectTrigger>
+
+            <MultiSelectContent>
+              <MultiSelectSearch />
+
+              <MultiSelectList>
+                {tierFilterOptions.map((option) => (
+                  <MultiSelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MultiSelectItem>
+                ))}
+              </MultiSelectList>
+            </MultiSelectContent>
+          </MultiSelect>
+        </Label>
+      </div>
+
+      <div>
+        <Label className="space-y-2">
+          <span>Types</span>
+
+          <MultiSelect
+            value={types}
+            onValueChange={(value) => {
+              setTypes(value);
+            }}
+          >
+            <MultiSelectTrigger>
+              <MultiSelectValue placeholder="Select types" />
+            </MultiSelectTrigger>
+
+            <MultiSelectContent>
+              <MultiSelectSearch />
+
+              <MultiSelectList>
+                {typeFilterOptions.map((option) => (
+                  <MultiSelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MultiSelectItem>
+                ))}
+              </MultiSelectList>
+            </MultiSelectContent>
+          </MultiSelect>
+        </Label>
+      </div>
+
+      <div>
+        <Label className="space-y-2">
+          <span>Categories</span>
+
+          <MultiSelect
+            value={categories}
+            onValueChange={(value) => {
+              setCategories(value);
+            }}
+          >
+            <MultiSelectTrigger>
+              <MultiSelectValue placeholder="Select categories" />
+            </MultiSelectTrigger>
+
+            <MultiSelectContent>
+              <MultiSelectSearch />
+
+              <MultiSelectList>
+                {categoryFilterOptions.map((option) => (
+                  <MultiSelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MultiSelectItem>
+                ))}
+              </MultiSelectList>
+            </MultiSelectContent>
+          </MultiSelect>
+        </Label>
+      </div>
+    </div>
   );
 }
 
