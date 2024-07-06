@@ -19,6 +19,11 @@ import { useSearchParams } from "next/navigation";
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 import { InferSelectModel } from "drizzle-orm";
 import { blueprints } from "~/server/db/schema";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 interface Record extends Omit<Adventurer, "items"> {
   items: (InferSelectModel<typeof blueprints> & { tag1: string | null })[];
@@ -64,16 +69,45 @@ const columns: ColumnDef<Record>[] = [
           const quality = item.tag1 ?? "common";
 
           return (
-            <div className="relative flex flex-col items-center justify-center">
-              <Avatar key={item.id} src={item.image} alt={item.name} />
+            <Tooltip>
+              <TooltipTrigger className="relative flex flex-col items-center justify-center">
+                <Avatar key={item.id} src={item.image} alt={item.name} />
 
-              <Image
-                src={`https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/quality-indicators/icon_${quality}.webp`}
-                height="20"
-                width="20"
-                alt={item.name}
-              />
-            </div>
+                <Image
+                  src={`https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/quality-indicators/icon_${quality}.webp`}
+                  height="20"
+                  width="20"
+                  alt={item.name}
+                />
+              </TooltipTrigger>
+
+              <TooltipContent>
+                <p className="mb-0.5 font-semibold">{item.name}</p>
+
+                <ul className="space-y-0.5">
+                  <li>
+                    <span className="font-medium">Attack:</span>{" "}
+                    {formatNumber(item.attack)}
+                  </li>
+                  <li>
+                    <span className="font-medium">Health:</span>{" "}
+                    {formatNumber(item.health)}
+                  </li>
+                  <li>
+                    <span className="font-medium">Defence:</span>{" "}
+                    {formatNumber(item.defence)}
+                  </li>
+                  <li>
+                    <span className="font-medium">Crit:</span>{" "}
+                    {formatNumber(item.crit)}%
+                  </li>
+                  <li>
+                    <span className="font-medium">Evasion:</span>{" "}
+                    {formatNumber(item.evasion)}%
+                  </li>
+                </ul>
+              </TooltipContent>
+            </Tooltip>
           );
         })}
       </span>
