@@ -83,3 +83,23 @@ export type Blueprint = {
   EnchantedItemTexturer: boolean;
   isTitanItem: boolean;
 };
+
+export type BlueprintMarketData = {
+  id: number;
+  tType: string;
+  uid: string;
+  tag1: string | null;
+  tag2: string | null;
+  tag3: string | null;
+  goldQty: number;
+  gemsQty: number;
+  created: string;
+  tier: number;
+  order: number;
+  cityId: number;
+  goldPrice: number;
+  gemsPrice: number;
+  requestCycleLast: number;
+  createdAt: string;
+  updatedAt: string;
+};

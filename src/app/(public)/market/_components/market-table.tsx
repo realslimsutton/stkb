@@ -62,135 +62,31 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "~/components/ui/drawer";
+import { useQuery } from "@tanstack/react-query";
+import { BlueprintMarketData } from "~/shop-titans/types";
+import { DataTableSkeleton } from "~/components/ui/datatable/skeleton";
+import { Switch } from "~/components/ui/switch";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 type Record = InferSelectModel<typeof blueprints>;
 
-const columns: ColumnDef<Record>[] = [
-  {
-    accessorKey: "image",
-    header: () => null,
-    cell: ({ row }) => (
-      <Avatar src={row.original.image} alt={row.original.name} />
-    ),
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
-  },
-  {
-    accessorKey: "type",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Type" />
-    ),
-    cell: ({ row }) => (
-      <>{blueprintTypes[row.original.type as keyof typeof blueprintTypes]}</>
-    ),
-    filterFn: (row, columnId, filterValue) => {
-      if (!filterValue || filterValue?.length === 0) {
-        return true;
-      }
-
-      return filterValue.includes(row.original.type);
-    },
-  },
-  {
-    accessorKey: "category",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Category" />
-    ),
-    filterFn: (row, columnId, filterValue) => {
-      if (!filterValue || filterValue?.length === 0) {
-        return true;
-      }
-
-      return filterValue.includes(row.original.category);
-    },
-  },
-  {
-    accessorKey: "tier",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tier" />
-    ),
-    cell: ({ row }) => <>{formatNumber(row.original.tier)}</>,
-    filterFn: (row, columnId, filterValue) => {
-      if (!filterValue || filterValue?.length === 0) {
-        return true;
-      }
-
-      return filterValue.includes(row.original.tier.toString());
-    },
-  },
-  {
-    accessorKey: "value",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Value" />
-    ),
-    cell: ({ row }) => (
-      <span className="flex items-center gap-1">
-        <Image src="/images/icon_gold.webp" alt="Gold" height="20" width="20" />
-        {formatNumber(row.original.value)}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "experience",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Merchant XP" />
-    ),
-    cell: ({ row }) => <>{formatNumber(row.original.experience)}</>,
-  },
-  {
-    accessorKey: "craftExperience",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Worker XP" />
-    ),
-    cell: ({ row }) => <>{formatNumber(row.original.craftExperience)}</>,
-  },
-  {
-    accessorKey: "time",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Craft Time" />
-    ),
-    cell: ({ row }) => <>{formatDuration(row.original.time)}</>,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-          <DropdownMenuItem asChild>
-            <Link
-              href={`https://playshoptitans.com/blueprints/${row.original.category}/${row.original.type}/${row.original.id}`}
-              target="_blank"
-              className="flex cursor-pointer items-center gap-1"
-            >
-              View blueprint
-              <ExternalLinkIcon className="h-4 w-4" />
-            </Link>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-];
-
 const searchParamsSchema = z.object({
-  search: z.string().optional(),
-  tiers: z.array(z.string()).optional().catch([]),
-  types: z.array(z.string()).optional().catch([]),
-  categories: z.array(z.string()).optional().catch([]),
+  search: z.string().optional().default("").catch(""),
+  tiers: z.array(z.string()).optional().default([]).catch([]),
+  types: z.array(z.string()).optional().default([]).catch([]),
+  categories: z.array(z.string()).optional().default([]).catch([]),
+  showMarketColumns: z
+    .string()
+    .toLowerCase()
+    .transform((x) => x === "true")
+    .pipe(z.boolean())
+    .optional()
+    .catch(false),
 });
 
 export default function MarketTable({
@@ -231,11 +127,265 @@ export default function MarketTable({
     }));
   }, [blueprintCategories]);
 
-  const [search, setSearch] = React.useState(parsedSearchParams.search ?? "");
-  const [tiers, setTiers] = React.useState(parsedSearchParams.tiers ?? []);
-  const [types, setTypes] = React.useState(parsedSearchParams.types ?? []);
+  const [search, setSearch] = React.useState(parsedSearchParams.search);
+  const [tiers, setTiers] = React.useState(parsedSearchParams.tiers);
+  const [types, setTypes] = React.useState(parsedSearchParams.types);
   const [categories, setCategories] = React.useState(
-    parsedSearchParams.categories ?? [],
+    parsedSearchParams.categories,
+  );
+  const [showMarketColumns, setShowMarketColumns] = React.useState(
+    parsedSearchParams.showMarketColumns ?? false,
+  );
+
+  const { data: marketData, isLoading } = useQuery({
+    queryKey: ["market.marketData", showMarketColumns],
+    refetchInterval: 330000,
+    queryFn: async () => await fetchMarketData(showMarketColumns),
+  });
+
+  const columns: ColumnDef<Record>[] = React.useMemo(
+    () => [
+      {
+        accessorKey: "image",
+        header: () => null,
+        cell: ({ row }) => (
+          <Avatar src={row.original.image} alt={row.original.name} />
+        ),
+      },
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Name" />
+        ),
+      },
+      {
+        accessorKey: "type",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Type" />
+        ),
+        cell: ({ row }) => (
+          <>
+            {blueprintTypes[row.original.type as keyof typeof blueprintTypes]}
+          </>
+        ),
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue || filterValue?.length === 0) {
+            return true;
+          }
+
+          return filterValue.includes(row.original.type);
+        },
+      },
+      {
+        accessorKey: "category",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Category" />
+        ),
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue || filterValue?.length === 0) {
+            return true;
+          }
+
+          return filterValue.includes(row.original.category);
+        },
+      },
+      {
+        accessorKey: "tier",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Tier" />
+        ),
+        cell: ({ row }) => <>{formatNumber(row.original.tier)}</>,
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue || filterValue?.length === 0) {
+            return true;
+          }
+
+          return filterValue.includes(row.original.tier.toString());
+        },
+      },
+      {
+        accessorKey: "value",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Base Value" />
+        ),
+        cell: ({ row }) => (
+          <span className="flex items-center gap-1">
+            <Image
+              src="/images/icon_gold.webp"
+              alt="Gold"
+              height="20"
+              width="20"
+            />
+            {formatNumber(row.original.value)}
+          </span>
+        ),
+      },
+      {
+        id: "marketArbitrage",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Market Arbitrage" />
+        ),
+        accessorFn: (row) => {
+          if (!marketData) {
+            return "-";
+          }
+
+          const item = marketData.get(row.id);
+          if (!item) {
+            return "-";
+          }
+
+          if (!item.offer || !item.request) {
+            return "-";
+          }
+
+          return item.request.goldPrice - item.offer.goldPrice;
+        },
+        cell: ({ row, getValue }) => {
+          const value = getValue();
+          if (!value) {
+            return "-";
+          }
+
+          const item = marketData?.get(row.original.id);
+          if (!item?.offer || !item?.request) {
+            return formatNumber(getValue() as number | null);
+          }
+
+          return (
+            <>
+              <Tooltip>
+                <TooltipTrigger className="flex items-center gap-1">
+                  <span>{formatNumber(value as number | null)}</span>
+                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+
+                <TooltipContent className="space-y-2">
+                  {item?.offer && item?.request && (
+                    <>
+                      <p>
+                        <span className="font-medium">Request Quantity:</span>{" "}
+                        {formatNumber(item?.request.goldQty)}
+                      </p>
+                      <p>
+                        <span className="font-medium">Offer Quantity:</span>{" "}
+                        {formatNumber(item?.offer.goldQty)}
+                      </p>
+                    </>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </>
+          );
+        },
+      },
+      {
+        id: "shopArbitrage",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Shop Arbitrage" />
+        ),
+        accessorFn: (row) => {
+          if (!marketData) {
+            return null;
+          }
+
+          const item = marketData.get(row.id);
+          if (!item) {
+            return null;
+          }
+
+          if (!item.request) {
+            return null;
+          }
+
+          return row.value - item.request.goldPrice;
+        },
+        cell: ({ row, getValue }) => {
+          const value = getValue();
+          if (!value) {
+            return "-";
+          }
+
+          const item = marketData?.get(row.original.id);
+          if (!item?.request) {
+            return formatNumber(getValue() as number | null);
+          }
+
+          return (
+            <>
+              <Tooltip>
+                <TooltipTrigger className="flex items-center gap-1">
+                  <span>{formatNumber(value as number | null)}</span>
+                  <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+
+                <TooltipContent className="space-y-2">
+                  {item?.request && (
+                    <>
+                      <p>
+                        <span className="font-medium">Request Quantity:</span>{" "}
+                        {formatNumber(item?.request.goldQty)}
+                      </p>
+                    </>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </>
+          );
+        },
+      },
+      {
+        accessorKey: "experience",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Merchant XP" />
+        ),
+        cell: ({ row }) => <>{formatNumber(row.original.experience)}</>,
+      },
+      {
+        accessorKey: "craftExperience",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Worker XP" />
+        ),
+        cell: ({ row }) => <>{formatNumber(row.original.craftExperience)}</>,
+      },
+      {
+        accessorKey: "time",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Craft Time" />
+        ),
+        cell: ({ row }) => <>{formatDuration(row.original.time)}</>,
+      },
+      {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  href={`https://playshoptitans.com/blueprints/${row.original.category}/${row.original.type}/${row.original.id}`}
+                  target="_blank"
+                  className="flex cursor-pointer items-center gap-1"
+                >
+                  View blueprint
+                  <ExternalLinkIcon className="h-4 w-4" />
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [marketData],
   );
 
   const { table } = useDataTable({
@@ -292,6 +442,14 @@ export default function MarketTable({
     filterableColumns.category.setFilterValue(categories);
   }, [filterableColumns, categories]);
 
+  if (showMarketColumns && isLoading) {
+    return (
+      <div className="w-full rounded-lg border bg-background shadow-xl">
+        <DataTableSkeleton columnCount={5} />
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="grid gap-4 p-4 sm:grid-cols-2">
@@ -317,6 +475,8 @@ export default function MarketTable({
             categoryFilterOptions={categoryFilterOptions}
             categories={categories}
             setCategories={setCategories}
+            showMarketColumns={showMarketColumns}
+            setShowMarketColumns={setShowMarketColumns}
           />
         </div>
       </div>
@@ -330,12 +490,114 @@ export default function MarketTable({
         setTypes={setTypes}
         categories={categories}
         setCategories={setCategories}
+        showMarketColumns={showMarketColumns}
         searchParams={searchParams}
       />
 
       <DataTable table={table}></DataTable>
     </>
   );
+}
+
+async function fetchMarketData(showMarketColumns: boolean) {
+  if (!showMarketColumns) {
+    return null;
+  }
+
+  const response = await fetch("https://smartytitans.com/api/item/last/all", {
+    cache: "no-store",
+  });
+
+  const data = (await response.json()).data as BlueprintMarketData[];
+
+  if (!data) {
+    return null;
+  }
+
+  const keyedData = new Map<
+    string,
+    {
+      offer?: {
+        goldPrice: number;
+        goldQty: number;
+        gemsPrice: number;
+        gemsQty: number;
+        createdAt: Date;
+      };
+      request?: {
+        goldPrice: number;
+        goldQty: number;
+        gemsPrice: number;
+        gemsQty: number;
+        createdAt: Date;
+      };
+    }
+  >();
+
+  for (const item of data) {
+    if (item.tag1 !== null) {
+      continue;
+    }
+
+    const entry = keyedData.get(item.uid);
+    const createdAt = new Date(item.createdAt);
+
+    if (!entry) {
+      switch (item.tType) {
+        case "o":
+          keyedData.set(item.uid, {
+            offer: {
+              goldPrice: item.goldPrice,
+              goldQty: item.goldQty,
+              gemsPrice: item.gemsPrice,
+              gemsQty: item.gemsQty,
+              createdAt,
+            },
+          });
+          break;
+        case "r":
+          keyedData.set(item.uid, {
+            request: {
+              goldPrice: item.goldPrice,
+              goldQty: item.goldQty,
+              gemsPrice: item.gemsPrice,
+              gemsQty: item.gemsQty,
+              createdAt,
+            },
+          });
+          break;
+      }
+
+      continue;
+    }
+
+    switch (item.tType) {
+      case "o":
+        if (!entry.offer || createdAt > entry.offer.createdAt) {
+          entry.offer = {
+            goldPrice: item.goldPrice,
+            goldQty: item.goldQty,
+            gemsPrice: item.gemsPrice,
+            gemsQty: item.gemsQty,
+            createdAt,
+          };
+        }
+        break;
+      case "r":
+        if (!entry.request || createdAt > entry.request.createdAt) {
+          entry.request = {
+            goldPrice: item.goldPrice,
+            goldQty: item.goldQty,
+            gemsPrice: item.gemsPrice,
+            gemsQty: item.gemsQty,
+            createdAt,
+          };
+        }
+        break;
+    }
+  }
+
+  return keyedData;
 }
 
 function TableFiltersWrapper({
@@ -348,6 +610,8 @@ function TableFiltersWrapper({
   categoryFilterOptions,
   categories,
   setCategories,
+  showMarketColumns,
+  setShowMarketColumns,
 }: {
   tierFilterOptions: { value: string; label: string }[];
   tiers: string[];
@@ -358,6 +622,8 @@ function TableFiltersWrapper({
   categoryFilterOptions: { value: string; label: string }[];
   categories: string[];
   setCategories: (value: string[]) => void;
+  showMarketColumns: boolean;
+  setShowMarketColumns: (value: boolean) => void;
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -381,6 +647,8 @@ function TableFiltersWrapper({
             categoryFilterOptions={categoryFilterOptions}
             categories={categories}
             setCategories={setCategories}
+            showMarketColumns={showMarketColumns}
+            setShowMarketColumns={setShowMarketColumns}
           />
         </PopoverContent>
       </Popover>
@@ -403,6 +671,8 @@ function TableFiltersWrapper({
           categoryFilterOptions={categoryFilterOptions}
           categories={categories}
           setCategories={setCategories}
+          showMarketColumns={showMarketColumns}
+          setShowMarketColumns={setShowMarketColumns}
         />
       </DrawerContent>
     </Drawer>
@@ -419,6 +689,8 @@ export function TableFilters({
   categoryFilterOptions,
   categories,
   setCategories,
+  showMarketColumns,
+  setShowMarketColumns,
 }: {
   tierFilterOptions: { value: string; label: string }[];
   tiers: string[];
@@ -429,6 +701,8 @@ export function TableFilters({
   categoryFilterOptions: { value: string; label: string }[];
   categories: string[];
   setCategories: (value: string[]) => void;
+  showMarketColumns: boolean;
+  setShowMarketColumns: (value: boolean) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -518,6 +792,16 @@ export function TableFilters({
           </MultiSelect>
         </Label>
       </div>
+
+      <div>
+        <Label className="flex items-center gap-2">
+          <Switch
+            checked={showMarketColumns}
+            onCheckedChange={setShowMarketColumns}
+          />
+          Show market columns
+        </Label>
+      </div>
     </div>
   );
 }
@@ -531,6 +815,7 @@ function TableFilterStatus({
   setTypes,
   categories,
   setCategories,
+  showMarketColumns,
   searchParams,
 }: {
   search: string;
@@ -541,6 +826,7 @@ function TableFilterStatus({
   setTypes: (value: string[]) => void;
   categories: string[];
   setCategories: (value: string[]) => void;
+  showMarketColumns: boolean;
   searchParams: ReadonlyURLSearchParams;
 }) {
   const router = useRouter();
@@ -562,6 +848,7 @@ function TableFilterStatus({
           tiers: tiers,
           types: types,
           categories: categories,
+          showMarketColumns: showMarketColumns,
         },
         searchParams,
       )}`,
@@ -571,7 +858,7 @@ function TableFilterStatus({
     );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tiers, types, categories]);
+  }, [search, tiers, types, categories, showMarketColumns]);
 
   if (!filterByName && !filterByTier && !filterByType && !filterByCategory) {
     return null;
