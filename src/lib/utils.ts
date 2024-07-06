@@ -37,3 +37,7 @@ export function createQueryString(
 
   return newSearchParams.toString();
 }
+
+export function wrapArray<T>(value: T | T[]) {
+  return Array.isArray(value) ? value : [value];
+}

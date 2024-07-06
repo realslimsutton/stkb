@@ -81,6 +81,59 @@ export const blueprintTypes = {
   spirit: "Spirit",
 };
 
+export const heroClasses = {
+  fighters: {
+    soldier: "Soldier",
+    mercenary: "Mercenary",
+    barbarian: "Barbarian",
+    chieftain: "Chieftain",
+    knight: "Knight",
+    lord: "Lord",
+    ranger: "Ranger",
+    warden: "Warden",
+    samurai: "Samurai",
+    daimyo: "Daimyo",
+    berserker: "Berserker",
+    jarl: "Jarl",
+    dark_knight: "Dark Knight",
+    death_knight: "Death Knight",
+  },
+
+  rogues: {
+    thief: "Thief",
+    trickster: "Trickster",
+    monk: "Monk",
+    grandmaster: "Grandmaster",
+    musketeer: "Musketeer",
+    condquistador: "Condquistador",
+    wanderer: "Wanderer",
+    pathfinder: "Pathfinder",
+    ninja: "Ninja",
+    sensei: "Sensei",
+    dancer: "Dancer",
+    acrobat: "Acrobat",
+    velite: "Velite",
+    praetorian: "Praetorian",
+  },
+
+  spellcasters: {
+    mage: "Mage",
+    archmage: "Archmage",
+    cleric: "Cleric",
+    bishop: "Bishop",
+    druid: "Druid",
+    arch_druid: "Arch Druid",
+    sorcerer: "Sorcerer",
+    warlock: "Warlock",
+    spellblade: "Spellblade",
+    spellknight: "Spellknight",
+    geomancer: "Geomancer",
+    astramancer: "Astramancer",
+    chronomancer: "Chronomancer",
+    fateweaver: "Fateweaver",
+  },
+};
+
 export const heroBaseClasses = {
   // Fighters
   soldier: "soldier",

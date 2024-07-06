@@ -1,6 +1,6 @@
 "use client";
 
-import { Column, ColumnDef, Table } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { InferSelectModel } from "drizzle-orm";
 import * as React from "react";
 import Avatar from "~/components/ui/avatar";
@@ -16,11 +16,23 @@ import { blueprints } from "~/server/db/schema";
 import { blueprintCategories, blueprintTypes } from "~/shop-titans/data/enums";
 import { DataTableColumnHeader } from "../../../../components/ui/datatable/column-header";
 
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLinkIcon, MoreHorizontal, XCircleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  ReadonlyURLSearchParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { useMediaQuery } from "usehooks-ts";
+import { z } from "zod";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { DataTableSkeleton } from "~/components/ui/datatable/skeleton";
+import { Drawer, DrawerContent, DrawerTrigger } from "~/components/ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,42 +56,28 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { z } from "zod";
-import {
-  ReadonlyURLSearchParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
-import { createQueryString } from "~/lib/utils";
-import useParsedSearchParams from "~/hooks/use-parsed-search-params";
-import { useMediaQuery } from "usehooks-ts";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "~/components/ui/drawer";
-import { useQuery } from "@tanstack/react-query";
-import { BlueprintMarketData } from "~/shop-titans/types";
-import { DataTableSkeleton } from "~/components/ui/datatable/skeleton";
 import { Switch } from "~/components/ui/switch";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import useParsedSearchParams from "~/hooks/use-parsed-search-params";
+import { createQueryString, wrapArray } from "~/lib/utils";
+import { BlueprintMarketData } from "~/shop-titans/types";
 
 type Record = InferSelectModel<typeof blueprints>;
 
 const searchParamsSchema = z.object({
   search: z.string().optional().default("").catch(""),
-  tiers: z.array(z.string()).optional().default([]).catch([]),
-  types: z.array(z.string()).optional().default([]).catch([]),
-  categories: z.array(z.string()).optional().default([]).catch([]),
+  tiers: z.array(z.string()).or(z.string()).optional().default([]).catch([]),
+  types: z.array(z.string()).or(z.string()).optional().default([]).catch([]),
+  categories: z
+    .array(z.string())
+    .or(z.string())
+    .optional()
+    .default([])
+    .catch([]),
   showMarketColumns: z
     .string()
     .toLowerCase()
@@ -128,10 +126,10 @@ export default function MarketTable({
   }, [blueprintCategories]);
 
   const [search, setSearch] = React.useState(parsedSearchParams.search);
-  const [tiers, setTiers] = React.useState(parsedSearchParams.tiers);
-  const [types, setTypes] = React.useState(parsedSearchParams.types);
+  const [tiers, setTiers] = React.useState(wrapArray(parsedSearchParams.tiers));
+  const [types, setTypes] = React.useState(wrapArray(parsedSearchParams.types));
   const [categories, setCategories] = React.useState(
-    parsedSearchParams.categories,
+    wrapArray(parsedSearchParams.categories),
   );
   const [showMarketColumns, setShowMarketColumns] = React.useState(
     parsedSearchParams.showMarketColumns ?? false,
@@ -844,11 +842,11 @@ function TableFilterStatus({
     router.push(
       `${pathname}?${createQueryString(
         {
-          search: search,
-          tiers: tiers,
-          types: types,
-          categories: categories,
-          showMarketColumns: showMarketColumns,
+          search,
+          tiers,
+          types,
+          categories,
+          showMarketColumns,
         },
         searchParams,
       )}`,
