@@ -76,7 +76,7 @@ const columns: ColumnDef<Record>[] = [
   {
     accessorKey: "cls",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
+      <DataTableColumnHeader column={column} title="Class" />
     ),
     cell: ({ row }) => <>{capitalise(row.original.cls)}</>,
     filterFn: (row, columnId, filterValue) => {
@@ -102,8 +102,6 @@ const columns: ColumnDef<Record>[] = [
     },
     cell: ({ row, getValue }) => {
       const skills = getValue() as (string | null)[];
-
-      console.log(row.original.cls);
 
       return (
         <span className="flex items-center gap-2">

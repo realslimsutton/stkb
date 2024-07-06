@@ -95,8 +95,8 @@ export const heroClasses = {
     daimyo: "Daimyo",
     berserker: "Berserker",
     jarl: "Jarl",
-    dark_knight: "Dark Knight",
-    death_knight: "Death Knight",
+    darkknight: "Dark Knight",
+    deathknight: "Death Knight",
   },
 
   rogues: {
@@ -122,7 +122,7 @@ export const heroClasses = {
     cleric: "Cleric",
     bishop: "Bishop",
     druid: "Druid",
-    arch_druid: "Arch Druid",
+    archdruid: "Arch Druid",
     sorcerer: "Sorcerer",
     warlock: "Warlock",
     spellblade: "Spellblade",
@@ -148,8 +148,8 @@ export const heroBaseClasses = {
   daimyo: "samurai",
   berserker: "berserker",
   jarl: "berserker",
-  dark_knight: "dark_knight",
-  death_knight: "dark_knight",
+  darkknight: "darkknight",
+  deathknight: "darkknight",
 
   // Rogues
   thief: "thief",
@@ -173,7 +173,7 @@ export const heroBaseClasses = {
   cleric: "cleric",
   bishop: "cleric",
   druid: "druid",
-  arch_druid: "druid",
+  archdruid: "druid",
   sorcerer: "sorcerer",
   warlock: "sorcerer",
   spellblade: "spellblade",

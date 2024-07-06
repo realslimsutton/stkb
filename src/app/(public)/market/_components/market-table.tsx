@@ -392,6 +392,8 @@ export default function MarketTable({
     defaultPerPage: 10,
     columnVisibility: {
       category: false,
+      marketArbitrage: showMarketColumns,
+      shopArbitrage: showMarketColumns,
     },
     initialState: {
       columnFilters: [
@@ -421,6 +423,8 @@ export default function MarketTable({
       tier: table.getColumn("tier")!,
       type: table.getColumn("type")!,
       category: table.getColumn("category")!,
+      marketArbitrage: table.getColumn("marketArbitrage")!,
+      shopArbitrage: table.getColumn("shopArbitrage")!,
     };
   }, [table]);
 
@@ -439,6 +443,11 @@ export default function MarketTable({
   React.useEffect(() => {
     filterableColumns.category.setFilterValue(categories);
   }, [filterableColumns, categories]);
+
+  React.useEffect(() => {
+    filterableColumns.marketArbitrage.toggleVisibility(showMarketColumns);
+    filterableColumns.shopArbitrage.toggleVisibility(showMarketColumns);
+  }, [showMarketColumns]);
 
   if (showMarketColumns && isLoading) {
     return (
