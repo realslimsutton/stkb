@@ -133,7 +133,7 @@ export function DesktopNavigation({
                 </li>
 
                 <DesktopListItem
-                  href="#"
+                  href="/heroes"
                   title="Your Heroes"
                   active={isHeroPage}
                 >
@@ -328,7 +328,7 @@ export function MobileNavigation() {
 
             <CollapsibleContent>
               <div className="-mx-6 grid gap-6 bg-muted p-6">
-                <MobileListDropdownItem href="#" title="Your Heroes">
+                <MobileListDropdownItem href="/heroes" title="Your Heroes">
                   Track your hero progression &amp; statistics.
                 </MobileListDropdownItem>
 

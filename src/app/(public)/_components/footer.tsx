@@ -40,7 +40,7 @@ export default function Footer() {
               <p className="font-medium">Tools</p>
 
               <nav className="mt-4 flex flex-col space-y-2 text-sm">
-                <FooterLink href="#" title="Your Heroes" />
+                <FooterLink href="/heroes" title="Your Heroes" />
 
                 <FooterLink href="#" title="Your Champions" />
 
@@ -59,7 +59,7 @@ export default function Footer() {
 
               <nav className="mt-4 flex flex-col space-y-2 text-sm">
                 <FooterLink href="#" title="Contact" />
-                <FooterLink href="#" title="FAQ" />
+                <FooterLink href="/#faq" title="FAQ" />
               </nav>
             </div>
 
