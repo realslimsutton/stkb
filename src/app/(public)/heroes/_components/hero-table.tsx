@@ -19,6 +19,7 @@ import { useSearchParams } from "next/navigation";
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 import { InferSelectModel } from "drizzle-orm";
 import { blueprints } from "~/server/db/schema";
+import { heroBaseClasses, heroSkillQualities } from "~/shop-titans/data/enums";
 
 interface Record extends Omit<Adventurer, "items"> {
   items: (InferSelectModel<typeof blueprints> & { tag1: string | null })[];
@@ -61,7 +62,7 @@ const columns: ColumnDef<Record>[] = [
     accessorFn: (row) => {
       return [row.skl1, row.skl2, row.skl3];
     },
-    cell: ({ getValue }) => {
+    cell: ({ row, getValue }) => {
       const skills = getValue() as (string | null)[];
 
       return (
@@ -71,9 +72,13 @@ const columns: ColumnDef<Record>[] = [
               return null;
             }
 
-            const url = `https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/skills/heroes/${skill}.webp`;
-
-            return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
+            return (
+              <SkillIcon
+                index={index}
+                skill={skill}
+                className={row.original.cls}
+              />
+            );
           })}
         </span>
       );
@@ -183,4 +188,50 @@ export default function HeroTable() {
       <DataTable table={table}></DataTable>
     </>
   );
+}
+
+function SkillIcon({
+  index,
+  className,
+  skill,
+}: {
+  index: number;
+  className: string;
+  skill: string;
+}) {
+  const url = `https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/skills/heroes/${skill}.webp`;
+
+  const baseClass = heroBaseClasses[className as keyof typeof heroBaseClasses];
+  if (!baseClass) {
+    return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
+  }
+
+  const qualities =
+    heroSkillQualities[baseClass as keyof typeof heroSkillQualities];
+  if (!qualities) {
+    return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
+  }
+
+  const quality = qualities[skill as keyof typeof qualities];
+  if (!quality) {
+    return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
+  }
+
+  return (
+    <div
+      key={`${index}-${skill}`}
+      className="relative flex flex-col items-center justify-center"
+    >
+      <Avatar src={url} alt={skill} />
+
+      <Image
+        src={`https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/quality-faces/icon_${quality}.webp`}
+        height="20"
+        width="20"
+        alt={skill}
+      />
+    </div>
+  );
+
+  return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
 }
