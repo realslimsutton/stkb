@@ -64,17 +64,19 @@ const columns: ColumnDef<Record>[] = [
     cell: ({ getValue }) => {
       const skills = getValue() as (string | null)[];
 
-      <span className="flex items-center gap-2">
-        {skills.map((skill, index) => {
-          if (!skill) {
-            return null;
-          }
+      return (
+        <span className="flex items-center gap-2">
+          {skills.map((skill, index) => {
+            if (!skill) {
+              return null;
+            }
 
-          const url = `https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/skills/heroes/${skill}.webp`;
+            const url = `https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/skills/heroes/${skill}.webp`;
 
-          return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
-        })}
-      </span>;
+            return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
+          })}
+        </span>
+      );
     },
   },
   {
