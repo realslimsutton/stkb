@@ -34,7 +34,7 @@ export const getUser = React.cache(async () => {
   }
 });
 
-export const getAccount = React.cache(
+export const fetchAccount = React.cache(
   () =>
     new Promise<Account | null>((resolve) => {
       Promise.all([getUser(), getSession()])
@@ -77,7 +77,7 @@ export const getAccount = React.cache(
           ws.addEventListener("open", () => {
             ws.send(
               JSON.stringify({
-                id: user.id,
+                id: xSollaUser.id,
                 token: token,
                 email: xSollaUser.email,
                 authType: "Xsolla",

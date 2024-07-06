@@ -632,47 +632,8 @@ export type Account = {
     }[];
     pet: unknown;
     petSpecies: unknown;
-    adventurers: unknown;
-    heroes: {
-      id: number;
-      uid: string;
-      level: number;
-      story: number;
-      isTitan: boolean;
-      xp: number;
-      busy: boolean;
-      onShip: boolean;
-      ready: number;
-      qlast: number;
-      rduration: number;
-      injured: boolean;
-      hired: boolean;
-      introduced: boolean;
-      cycle: number;
-      seen: boolean;
-      forceSpawn: boolean;
-      blitzSeen: boolean;
-      satk: number;
-      sdef: number;
-      shp: number;
-      sfir: number;
-      swtr: number;
-      sair: number;
-      sert: number;
-      slgt: number;
-      sdrk: number;
-      seeds: number;
-      hpSeeds: number;
-      atkSeeds: number;
-      defSeeds: number;
-      maxHpSeed: number;
-      maxAtkSeed: number;
-      maxDefSeed: number;
-      maxLvlSeed: number;
-      flags: unknown;
-      items: unknown;
-      transmogs: unknown;
-    }[];
+    adventurers: Adventurer[];
+    heroes: Hero[];
     crafts: unknown;
     upgrades: unknown;
     quests: unknown;
@@ -874,7 +835,7 @@ export type Account = {
   };
 };
 
-type Titan = {
+export type Titan = {
   name: string;
   city: string;
   adv: {
@@ -921,4 +882,86 @@ type Titan = {
     }[];
     transmogs: unknown;
   };
+};
+
+export type Adventurer = {
+  id: number;
+  name: string;
+  aseed: number;
+  level: number;
+  cust: {
+    bdyTyp: number;
+    bdyScl: string;
+    hrCut: string;
+    brd: string;
+    mst: string;
+    eyeClr: string;
+    hrClr: string;
+    skClr: string;
+    shrClr: string;
+    pntClr: string;
+    fclExpr: string;
+  };
+  xp: number;
+  ready: number;
+  qlast: number;
+  rduration: number;
+  cls: string;
+  gnd: string;
+  skl1: string;
+  skl2: string;
+  skl3: string;
+  satk: number;
+  shp: number;
+  hpSeeds: number;
+  atkSeeds: number;
+  items: {
+    id: number;
+    uid: string;
+    sid: number;
+    tag1?: string;
+    tag2?: string;
+  }[];
+  transmogs: unknown;
+};
+
+export type Hero = {
+  id: number;
+  uid: string;
+  level: number;
+  story: number;
+  isTitan: boolean;
+  xp: number;
+  busy: boolean;
+  onShip: boolean;
+  ready: number;
+  qlast: number;
+  rduration: number;
+  injured: boolean;
+  hired: boolean;
+  introduced: boolean;
+  cycle: number;
+  seen: boolean;
+  forceSpawn: boolean;
+  blitzSeen: boolean;
+  satk: number;
+  sdef: number;
+  shp: number;
+  sfir: number;
+  swtr: number;
+  sair: number;
+  sert: number;
+  slgt: number;
+  sdrk: number;
+  seeds: number;
+  hpSeeds: number;
+  atkSeeds: number;
+  defSeeds: number;
+  maxHpSeed: number;
+  maxAtkSeed: number;
+  maxDefSeed: number;
+  maxLvlSeed: number;
+  flags: unknown;
+  items: unknown;
+  transmogs: unknown;
 };

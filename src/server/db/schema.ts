@@ -4,6 +4,7 @@
 import {
   type AnyPgColumn,
   bigint,
+  bigserial,
   boolean,
   index,
   integer,
@@ -140,6 +141,24 @@ export const blueprints = createTable(
     ),
     speedupEnergyIndex: index("blueprints_speedup_energy_idx").on(
       table.speedupEnergy,
+    ),
+  }),
+);
+
+export const heroStats = createTable(
+  "hero_stats",
+  {
+    id: bigserial("id", { mode: "number" }).notNull().primaryKey(),
+    class: text("class").notNull(),
+    stat: text("stat").notNull(),
+    level: smallint("level").notNull(),
+    value: integer("value").notNull(),
+  },
+  (table) => ({
+    uniqueIndex: unique("hero_stats_unique_idx").on(
+      table.class,
+      table.stat,
+      table.level,
     ),
   }),
 );
