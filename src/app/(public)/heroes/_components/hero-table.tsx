@@ -56,16 +56,41 @@ const columns: ColumnDef<Record>[] = [
     cell: ({ row }) => <>{formatNumber(row.original.level)}</>,
   },
   {
+    id: "skills",
+    header: "Skills",
+    accessorFn: (row) => {
+      return [row.skl1, row.skl2, row.skl3];
+    },
+    cell: ({ getValue }) => {
+      const skills = getValue() as (string | null)[];
+
+      <span className="flex items-center gap-2">
+        {skills.map((skill, index) => {
+          if (!skill) {
+            return null;
+          }
+
+          const url = `https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/skills/heroes/${skill}.webp`;
+
+          return <Avatar key={`${index}-${skill}`} src={url} alt={skill} />;
+        })}
+      </span>;
+    },
+  },
+  {
     accessorKey: "items",
     header: "Items",
     cell: ({ row }) => (
       <span className="flex items-center gap-2">
-        {row.original.items.map((item) => {
+        {row.original.items.map((item, index) => {
           const quality = item.tag1 ?? "common";
 
           return (
-            <div className="relative flex flex-col items-center justify-center">
-              <Avatar key={item.id} src={item.image} alt={item.name} />
+            <div
+              key={`${index}-${item.id}`}
+              className="relative flex flex-col items-center justify-center"
+            >
+              <Avatar src={item.image} alt={item.name} />
 
               <Image
                 src={`https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/quality-indicators/icon_${quality}.webp`}

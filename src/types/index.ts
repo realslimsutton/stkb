@@ -908,9 +908,9 @@ export type Adventurer = {
   rduration: number;
   cls: string;
   gnd: string;
-  skl1: string;
-  skl2: string;
-  skl3: string;
+  skl1: string | null;
+  skl2: string | null;
+  skl3: string | null;
   satk: number;
   shp: number;
   hpSeeds: number;
