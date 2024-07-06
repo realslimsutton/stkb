@@ -10,7 +10,7 @@ const cache = new Map();
 
 const ratelimit = new Ratelimit({
   redis: kv,
-  limiter: Ratelimit.cachedFixedWindow(1, "5 m"),
+  limiter: Ratelimit.slidingWindow(5, "10 s"),
   ephemeralCache: cache,
 });
 
