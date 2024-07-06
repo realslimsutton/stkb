@@ -103,6 +103,8 @@ const columns: ColumnDef<Record>[] = [
     cell: ({ row, getValue }) => {
       const skills = getValue() as (string | null)[];
 
+      console.log(row.original.cls);
+
       return (
         <span className="flex items-center gap-2">
           {skills.map((skill, index) => {
