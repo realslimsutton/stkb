@@ -65,6 +65,7 @@ import {
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 import { createQueryString, wrapArray } from "~/lib/utils";
 import { BlueprintMarketData } from "~/shop-titans/types";
+import { format } from "date-fns";
 
 type Record = InferSelectModel<typeof blueprints>;
 
@@ -270,6 +271,14 @@ export default function MarketTable({
                         <span className="font-medium">Offer Quantity:</span>{" "}
                         {formatNumber(item?.offer.goldQty)}
                       </p>
+                      <p>
+                        <span className="font-medium">Request Updated At:</span>{" "}
+                        {format(item.request.createdAt, "yyyy-MM-dd HH:mm:ss")}
+                      </p>
+                      <p>
+                        <span className="font-medium">Offer Updated At:</span>{" "}
+                        {format(item.offer.createdAt, "yyyy-MM-dd HH:mm:ss")}
+                      </p>
                     </>
                   )}
                 </TooltipContent>
@@ -325,6 +334,10 @@ export default function MarketTable({
                       <p>
                         <span className="font-medium">Offer Quantity:</span>{" "}
                         {formatNumber(item.offer.goldQty)}
+                      </p>
+                      <p>
+                        <span className="font-medium">Offer Updated At:</span>{" "}
+                        {format(item.offer.createdAt, "yyyy-MM-dd HH:mm:ss")}
                       </p>
                     </>
                   )}
@@ -549,7 +562,7 @@ async function fetchMarketData(showMarketColumns: boolean) {
     }
 
     const entry = keyedData.get(item.uid);
-    const createdAt = new Date(item.createdAt);
+    const createdAt = new Date(item.updatedAt);
 
     if (!entry) {
       switch (item.tType) {
