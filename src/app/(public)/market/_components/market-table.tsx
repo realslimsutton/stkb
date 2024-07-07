@@ -292,37 +292,37 @@ export default function MarketTable({
             return null;
           }
 
-          if (!item.request) {
+          if (!item.offer || item.offer.goldQty === 0) {
             return null;
           }
 
-          return row.value - item.request.goldPrice;
+          return row.value - item.offer.goldPrice;
         },
         cell: ({ row, getValue }) => {
-          const value = getValue();
+          const value = getValue() as number | null;
           if (!value) {
             return "-";
           }
 
           const item = marketData?.get(row.original.id);
-          if (!item?.request) {
-            return formatNumber(getValue() as number | null);
+          if (!item) {
+            return formatNumber(value);
           }
 
           return (
             <>
               <Tooltip>
                 <TooltipTrigger className="flex items-center gap-1">
-                  <span>{formatNumber(value as number | null)}</span>
+                  <span>{formatNumber(value)}</span>
                   <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
                 </TooltipTrigger>
 
                 <TooltipContent className="space-y-2">
-                  {item?.request && (
+                  {item?.offer && (
                     <>
                       <p>
-                        <span className="font-medium">Request Quantity:</span>{" "}
-                        {formatNumber(item?.request.goldQty)}
+                        <span className="font-medium">Offer Quantity:</span>{" "}
+                        {formatNumber(item.offer.goldQty)}
                       </p>
                     </>
                   )}
@@ -546,6 +546,10 @@ async function fetchMarketData(showMarketColumns: boolean) {
       continue;
     }
 
+    if (item.uid === "goldhammer") {
+      console.log(item);
+    }
+
     const entry = keyedData.get(item.uid);
     const createdAt = new Date(item.createdAt);
 
@@ -580,7 +584,7 @@ async function fetchMarketData(showMarketColumns: boolean) {
 
     switch (item.tType) {
       case "o":
-        if (!entry.offer || createdAt > entry.offer.createdAt) {
+        if (!entry.offer || createdAt >= entry.offer.createdAt) {
           entry.offer = {
             goldPrice: item.goldPrice,
             goldQty: item.goldQty,
@@ -591,7 +595,7 @@ async function fetchMarketData(showMarketColumns: boolean) {
         }
         break;
       case "r":
-        if (!entry.request || createdAt > entry.request.createdAt) {
+        if (!entry.request || createdAt >= entry.request.createdAt) {
           entry.request = {
             goldPrice: item.goldPrice,
             goldQty: item.goldQty,
