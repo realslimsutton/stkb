@@ -220,34 +220,35 @@ export default function MarketTable({
       },
       {
         id: "marketArbitrage",
+        sortUndefined: "last",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Market Arbitrage" />
         ),
         accessorFn: (row) => {
           if (!marketData) {
-            return "-";
+            return undefined;
           }
 
           const item = marketData.get(row.id);
           if (!item) {
-            return "-";
+            return undefined;
           }
 
           if (!item.offer || !item.request) {
-            return "-";
+            return undefined;
           }
 
           return item.request.goldPrice - item.offer.goldPrice;
         },
         cell: ({ row, getValue }) => {
-          const value = getValue();
+          const value = getValue() as number | undefined;
           if (!value) {
             return "-";
           }
 
           const item = marketData?.get(row.original.id);
           if (!item?.offer || !item?.request) {
-            return formatNumber(getValue() as number | null);
+            return formatNumber(value);
           }
 
           return (
@@ -279,27 +280,28 @@ export default function MarketTable({
       },
       {
         id: "shopArbitrage",
+        sortUndefined: "last",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Shop Arbitrage" />
         ),
         accessorFn: (row) => {
           if (!marketData) {
-            return null;
+            return undefined;
           }
 
           const item = marketData.get(row.id);
           if (!item) {
-            return null;
+            return undefined;
           }
 
           if (!item.offer || item.offer.goldQty === 0) {
-            return null;
+            return undefined;
           }
 
           return row.value - item.offer.goldPrice;
         },
         cell: ({ row, getValue }) => {
-          const value = getValue() as number | null;
+          const value = getValue() as number | undefined;
           if (!value) {
             return "-";
           }
@@ -544,10 +546,6 @@ async function fetchMarketData(showMarketColumns: boolean) {
   for (const item of data) {
     if (item.tag1 !== null) {
       continue;
-    }
-
-    if (item.uid === "goldhammer") {
-      console.log(item);
     }
 
     const entry = keyedData.get(item.uid);
