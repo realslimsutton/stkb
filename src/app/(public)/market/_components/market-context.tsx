@@ -330,9 +330,7 @@ async function fetchMarketPrices(debug: boolean) {
             request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
           }
         >(JSON.parse(lzString.decompress(cachedPrices))),
-        lastUpdatedAt: new Date(
-          (await localforage.getItem("market-prices-last-updated")) ?? 0,
-        ),
+        lastUpdatedAt: new Date(),
       };
     }
   }
@@ -355,14 +353,9 @@ async function fetchMarketPrices(debug: boolean) {
     }
   >();
 
-  let lastUpdatedAt = null;
   for (const item of data) {
     const referenceId = `${item.uid}.${item.tag1 ?? "normal"}` as ReferenceId;
     const updatedAt = new Date(item.updatedAt);
-
-    if (lastUpdatedAt === null || updatedAt > lastUpdatedAt) {
-      lastUpdatedAt = updatedAt;
-    }
 
     const prices = itemMap.get(referenceId);
     if (!prices) {
@@ -415,14 +408,12 @@ async function fetchMarketPrices(debug: boolean) {
     }
   }
 
+  const lastUpdatedAt = new Date();
+
   if (debug) {
     localforage.setItem(
       "market-prices",
       lzString.compress(JSON.stringify(Array.from(itemMap.entries()))),
-    );
-    localforage.setItem(
-      "market-prices-last-updated",
-      lastUpdatedAt?.getTime() ?? 0,
     );
   }
 

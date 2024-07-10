@@ -7,13 +7,17 @@ import {
   DoubleArrowRightIcon,
 } from "@radix-ui/react-icons";
 import { ColumnDef, Table } from "@tanstack/react-table";
-import { intlFormatDistance } from "date-fns";
 import { EllipsisVerticalIcon, ExternalLinkIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
+import TimeAgo from "react-timeago";
+import { useMediaQuery } from "usehooks-ts";
+import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
+import { Drawer, DrawerContent, DrawerTrigger } from "~/components/ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,20 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
-import { Separator } from "~/components/ui/separator";
-import useDataTable from "~/hooks/use-data-table";
-import { capitalise, formatNumber } from "~/lib/formatter";
-import { cn, createQueryString, wrapArray } from "~/lib/utils";
-import {
-  blueprintCategories,
-  blueprintTypes,
-  gradeComparisons,
-} from "~/shop-titans/data/enums";
-import { MarketContext, MarketContextType } from "./market-context";
-import { z } from "zod";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import useParsedSearchParams from "~/hooks/use-parsed-search-params";
-import { useMediaQuery } from "usehooks-ts";
 import { Label } from "~/components/ui/label";
 import {
   MultiSelect,
@@ -50,7 +40,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { Drawer, DrawerContent, DrawerTrigger } from "~/components/ui/drawer";
+import { Separator } from "~/components/ui/separator";
+import useDataTable from "~/hooks/use-data-table";
+import useParsedSearchParams from "~/hooks/use-parsed-search-params";
+import { capitalise, formatNumber } from "~/lib/formatter";
+import { cn, createQueryString, wrapArray } from "~/lib/utils";
+import { blueprintTypes, gradeComparisons } from "~/shop-titans/data/enums";
+import { MarketContext, MarketContextType } from "./market-context";
 
 type Record = MarketContextType["items"][0];
 
@@ -468,10 +464,9 @@ function MarketItemGrid({
 }) {
   const rows = table.getRowModel().rows;
 
-  const lastUpdatedFormatted = React.useMemo(
-    () => intlFormatDistance(lastUpdated, new Date()),
-    [lastUpdated],
-  );
+  const LastUpdatedAt = React.memo(({ date }: { date: Date }) => (
+    <TimeAgo date={date} />
+  ));
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -482,7 +477,7 @@ function MarketItemGrid({
               key={row.id}
               item={row.original}
               marketDataPrices={marketDataPrices}
-              lastUpdated={lastUpdatedFormatted}
+              LastUpdatedAt={<LastUpdatedAt date={lastUpdated} />}
             />
           );
         })
@@ -498,11 +493,11 @@ function MarketItemGrid({
 function MarketGridItem({
   item,
   marketDataPrices,
-  lastUpdated,
+  LastUpdatedAt,
 }: {
   item: Record;
   marketDataPrices: MarketContextType["marketData"]["prices"];
-  lastUpdated: string;
+  LastUpdatedAt: React.ReactNode;
 }) {
   const prices = React.useMemo(
     () => marketDataPrices.get(item.referenceId),
@@ -655,7 +650,7 @@ function MarketGridItem({
           <div>
             <h3 className="text-sm font-bold">Market Information</h3>
             <p className="text-xs font-medium text-muted-foreground">
-              Updated {lastUpdated}
+              Updated {LastUpdatedAt}
             </p>
           </div>
 
