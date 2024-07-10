@@ -46,7 +46,7 @@ export const fetchAccount = React.cache(
 
           setTimeout(() => resolve(null), 5000);
 
-          const ws = new WebSocket("wss://shopr-live.ripostegames.com/", [], {
+          const ws = new WebSocket("wss://shopr-live3.ripostegames.com", [], {
             connectionTimeout: 500,
             maxRetries: 3,
           });
