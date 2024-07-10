@@ -18,19 +18,10 @@ interface DataTableProps<TData> extends React.HTMLAttributes<HTMLDivElement> {
    * @type TanstackTable<TData>
    */
   table: TanstackTable<TData>;
-
-  /**
-   * The floating bar to render at the bottom of the table on row selection.
-   * @default null
-   * @type React.ReactNode | null
-   * @example floatingBar={<TasksTableFloatingBar table={table} />}
-   */
-  floatingBar?: React.ReactNode | null;
 }
 
 export function DataTable<TData>({
   table,
-  floatingBar = null,
   children,
   className,
   ...props
@@ -90,7 +81,6 @@ export function DataTable<TData>({
       </div>
       <div className="flex flex-col gap-2.5">
         <DataTablePagination table={table} />
-        {table.getFilteredSelectedRowModel().rows.length > 0 && floatingBar}
       </div>
     </div>
   );

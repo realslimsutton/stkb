@@ -1,19 +1,14 @@
-import * as React from "react";
-import { db } from "~/server/db";
+import { env } from "~/env";
 import PageHeader from "../_components/page-header";
-import MarketTable from "./_components/market-table";
-import { DataTableSkeleton } from "~/components/ui/datatable/skeleton";
-import { desc } from "drizzle-orm";
-import { blueprints } from "~/server/db/schema";
+import { MarketProvider } from "./_components/market-context";
+import MarketGrid from "./_components/market-grid";
 
 export const metadata = {
   title: "Market | Shop Titans Knowledge Base",
 };
 
 export default async function MarketPage() {
-  const dataLoader = db.query.blueprints.findMany({
-    orderBy: desc(blueprints.tier),
-  });
+  const isDev = env.NODE_ENV === "development";
 
   return (
     <>
@@ -24,17 +19,9 @@ export default async function MarketPage() {
         <PageHeader>Market</PageHeader>
 
         <div className="container relative mx-auto">
-          <div className="w-full rounded-lg border bg-background shadow-xl">
-            <React.Suspense
-              fallback={
-                <div className="w-full rounded-lg border bg-background shadow-xl">
-                  <DataTableSkeleton columnCount={5} />
-                </div>
-              }
-            >
-              <MarketTable dataLoader={dataLoader} />
-            </React.Suspense>
-          </div>
+          <MarketProvider debug={isDev}>
+            <MarketGrid />
+          </MarketProvider>
         </div>
       </div>
     </>

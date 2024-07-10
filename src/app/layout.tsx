@@ -1,8 +1,6 @@
-import { VercelToolbar } from "@vercel/toolbar/next";
 import { Inter } from "next/font/google";
 import * as React from "react";
 import { Toaster } from "~/components/ui/sonner";
-import { env } from "~/env";
 import { cn } from "~/lib/utils";
 import "~/styles/globals.css";
 import Providers from "./_components/providers";
@@ -27,8 +25,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const shouldInjectToolbar = env.NODE_ENV === "development";
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -46,8 +42,6 @@ export default function RootLayout({
 
           <Toaster richColors />
         </Providers>
-
-        {shouldInjectToolbar && <VercelToolbar />}
       </body>
     </html>
   );

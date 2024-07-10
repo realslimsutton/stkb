@@ -1,4 +1,3 @@
-import { withVercelToolbar } from "@vercel/toolbar/plugins/next";
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
@@ -32,6 +31,10 @@ const config = {
         source: "/api/xsolla/:path*",
         destination: "https://playshoptitans.com/api/xsolla/:path*",
       },
+      {
+        source: "/api/smartytitans/:path*",
+        destination: "https://smartytitans.com/:path*",
+      },
     ];
   },
   async redirects() {
@@ -46,4 +49,4 @@ const config = {
   skipTrailingSlashRedirect: true,
 };
 
-export default withVercelToolbar()(config);
+export default config;

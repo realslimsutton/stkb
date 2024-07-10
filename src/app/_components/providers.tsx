@@ -34,8 +34,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <ReactQueryStreamedHydration>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
           disableTransitionOnChange
         >
           <TooltipProvider>{children}</TooltipProvider>

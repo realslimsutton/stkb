@@ -6,7 +6,6 @@ import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
-import HeroBackground from "~/../public/images/hero_academia_background.png";
 import { logout } from "~/auth/utils";
 import { Button } from "~/components/ui/button";
 import {
@@ -14,15 +13,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,15 +30,8 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
 import { type User } from "~/types";
-import importSpreadsheet from "../_actions/import-spreadsheet";
 
-export function DesktopNavigation({
-  user,
-  marketImportEnabled,
-}: {
-  user: User | null;
-  marketImportEnabled: boolean;
-}) {
+export function DesktopNavigation({ user }: { user: User | null }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -107,10 +90,11 @@ export function DesktopNavigation({
                     >
                       <div>
                         <Image
-                          src={HeroBackground}
+                          src="https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/backgrounds/hero_academia.webp"
                           alt="Hero Academia"
+                          width={189}
+                          height={247}
                           style={{ height: "100%", width: "100%" }}
-                          placeholder="blur"
                           className="absolute inset-0 rounded-md object-cover"
                         />
 
@@ -159,51 +143,20 @@ export function DesktopNavigation({
             </NavigationMenuContent>
           </NavigationMenuItem>
 
-          {marketImportEnabled && (
-            <NavigationMenuItem>
-              <NavigationMenuTrigger
-                className={cn({
-                  "bg-transparent hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent":
-                    true,
-                  "text-muted-foreground": !isMarketPage,
-                  "text-accent-foreground": isMarketPage,
-                })}
-              >
-                Market
-              </NavigationMenuTrigger>
-
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] p-2">
-                  <DesktopListItem
-                    href="/market"
-                    title="Live Market"
-                    active={isMarketPage}
-                  >
-                    View market items and prices
-                  </DesktopListItem>
-
-                  <SpreadsheetImporter />
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          )}
-
-          {!marketImportEnabled && (
-            <NavigationMenuItem>
-              <Button
-                variant="link"
-                className={cn({
-                  "hover:text-accent-foreground hover:no-underline focus:text-accent-foreground":
-                    true,
-                  "text-muted-foreground": !isMarketPage,
-                  "text-accent-foreground": isMarketPage,
-                })}
-                asChild
-              >
-                <Link href="/market">Market</Link>
-              </Button>
-            </NavigationMenuItem>
-          )}
+          <NavigationMenuItem>
+            <Button
+              variant="link"
+              className={cn({
+                "hover:text-accent-foreground hover:no-underline focus:text-accent-foreground":
+                  true,
+                "text-muted-foreground": !isMarketPage,
+                "text-accent-foreground": isMarketPage,
+              })}
+              asChild
+            >
+              <Link href="/market">Market</Link>
+            </Button>
+          </NavigationMenuItem>
 
           <NavigationMenuItem>
             <NavigationMenuTrigger
@@ -404,68 +357,6 @@ export function MobileNavigation() {
         </div>
       </SheetContent>
     </Sheet>
-  );
-}
-
-function SpreadsheetImporter() {
-  async function handleImport() {
-    const toastId = toast.loading(`Importing data...`);
-
-    try {
-      if (!(await importSpreadsheet())) {
-        throw new Error();
-      }
-
-      toast.success("Successfully imported data.", {
-        id: toastId,
-      });
-    } catch {
-      toast.error("Failed to import data.", {
-        id: toastId,
-      });
-    }
-  }
-
-  return (
-    <li>
-      <Dialog>
-        <DialogTrigger asChild>
-          <NavigationMenuItem asChild>
-            <button className="block w-full select-none space-y-1 rounded-md p-3 font-medium leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-              <div className="flex items-center gap-1 text-sm leading-none">
-                Import Market Data
-              </div>
-
-              <p className="line-clamp-2 text-left text-sm leading-snug text-muted-foreground">
-                Import data from the spreadsheet.
-              </p>
-            </button>
-          </NavigationMenuItem>
-        </DialogTrigger>
-
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Import Data</DialogTitle>
-            <DialogDescription>
-              Automatically import data from the spreadsheet.
-            </DialogDescription>
-          </DialogHeader>
-
-          <p className="text-sm">
-            Are you sure you want to import all data from the spreadsheet?
-          </p>
-
-          <p className="text-sm text-destructive">
-            <span className="font-medium">Note:</span> Images will need
-            uploading separately.
-          </p>
-
-          <DialogFooter>
-            <Button onClick={async () => await handleImport()}>Import</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </li>
   );
 }
 

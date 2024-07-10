@@ -58,3 +58,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+.filter-superior {
+  filter: drop-shadow(0 0 7px #58fe99);
+}
+
+.filter-flawless {
+  filter: drop-shadow(0 0 7px #56f9ff);
+}
+
+.filter-epic {
+  filter: drop-shadow(0 0 7px #d86dfe);
+}
+
+.filter-legendary {
+  filter: drop-shadow(0 0 7px #ffe582);
+}

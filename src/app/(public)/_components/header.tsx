@@ -7,13 +7,7 @@ import { cn } from "~/lib/utils";
 import { DesktopNavigation, MobileNavigation } from "./navigation";
 import { type User } from "~/types";
 
-export default function Header({
-  user,
-  marketImportEnabled,
-}: {
-  user: User | null;
-  marketImportEnabled: boolean;
-}) {
+export default function Header({ user }: { user: User | null }) {
   const { ref, inView } = useInView({
     initialInView: true,
   });
@@ -31,10 +25,7 @@ export default function Header({
       >
         <Logo href="/" className="mr-auto" />
 
-        <DesktopNavigation
-          user={user}
-          marketImportEnabled={marketImportEnabled}
-        />
+        <DesktopNavigation user={user} />
 
         <MobileNavigation />
       </header>

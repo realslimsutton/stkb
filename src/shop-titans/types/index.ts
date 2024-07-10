@@ -1,4 +1,4 @@
-export type Blueprint = {
+export type Item = {
   uid: string;
   level: number;
   type: string;
@@ -6,7 +6,7 @@ export type Blueprint = {
   xp: number;
   craftXp: number;
   value: number;
-  tradeMinMaxValue: string;
+  tradeMinMaxValue: string | null;
   favor: number;
   time: number;
   atk: number;
@@ -14,7 +14,7 @@ export type Blueprint = {
   hp: number;
   eva: string;
   crit: string;
-  excl: string;
+  excl: string | null;
   tier: number;
   subtier: number;
   combo: number;
@@ -30,7 +30,7 @@ export type Blueprint = {
   r2Qty: number;
   resource3: string | null;
   r3Qty: number;
-  component1: string;
+  component1: string | null;
   c1Qty: number;
   c1Tags: string | null;
   component2: string | null;
@@ -53,8 +53,8 @@ export type Blueprint = {
   su1Cost: number;
   su2Cost: number;
   su3Cost: number;
-  restrict: unknown;
-  reqTags: unknown;
+  restrict: string | null;
+  reqTags: string | null;
   tagIndex: number;
   elements: string | null;
   skill: string | null;
@@ -69,7 +69,7 @@ export type Blueprint = {
   speedup: number;
   buyAnimIdOverride: number;
   questAnimIdOverride: number;
-  slotOverride: unknown;
+  slotOverride: string | null;
   soundType: string;
   unlock: number;
   chest: string | null;
@@ -84,21 +84,21 @@ export type Blueprint = {
   isTitanItem: boolean;
 };
 
-export type BlueprintMarketData = {
+export type MarketPrice = {
   id: number;
   tType: string;
   uid: string;
-  tag1: string | null;
-  tag2: string | null;
-  tag3: string | null;
+  tag1: string;
+  tag2: string;
+  tag3: string;
   goldQty: number;
   gemsQty: number;
   created: string;
   tier: number;
   order: number;
   cityId: number;
-  goldPrice: number;
-  gemsPrice: number;
+  goldPrice: number | null;
+  gemsPrice: number | null;
   requestCycleLast: number;
   createdAt: string;
   updatedAt: string;

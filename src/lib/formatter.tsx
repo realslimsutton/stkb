@@ -92,3 +92,31 @@ export function formatArray(value: string[], count = 3): string {
 
   return `${displayedItems} & ${remainingCount} more`;
 }
+
+export function roundNumber(value: number) {
+  if (value < 10) {
+    return value;
+  }
+
+  if (value < 50) {
+    return Math.round(value / 5) * 5;
+  }
+
+  if (value < 1000) {
+    return Math.round(value / 10) * 10;
+  }
+
+  if (value < 10000) {
+    return Math.round(value / 50) * 50;
+  }
+
+  if (value < 100000) {
+    return Math.round(value / 500) * 500;
+  }
+
+  if (value < 1000000) {
+    return Math.round(value / 5000) * 5000;
+  }
+
+  return Math.round(value / 50000) * 50000;
+}

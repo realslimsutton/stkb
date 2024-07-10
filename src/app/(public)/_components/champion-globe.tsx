@@ -74,7 +74,7 @@ function ChampionIcon({ name, title }: { name: string; title: string }) {
   return (
     <a key={guid()} title={title} className="cursor-pointer">
       <Image
-        src={`/images/champions/${name}.png`}
+        src={`https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/champions/${name}.webp`}
         alt={title}
         height="42"
         width="42"
