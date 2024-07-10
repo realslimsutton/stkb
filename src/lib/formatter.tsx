@@ -31,7 +31,9 @@ export function formatNumber(
     : numberFormatter2.format(convertedValue);
 
   if (!colour) {
-    return `${prefix ? (prefix as string) : ""}${formattedValue}${suffix ? (suffix as string) : ""}`;
+    return `${prefix ? (prefix as string) : ""}${formattedValue}${
+      suffix ? (suffix as string) : ""
+    }`;
   }
 
   return value >= 0 ? (
@@ -62,7 +64,7 @@ export function formatDuration(duration: number) {
 
   const totalHours = days * 24 + hours;
 
-  let result = [];
+  const result = [];
 
   if (totalHours > 0) {
     result.push(totalHours + "h");

@@ -1,4 +1,4 @@
-import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
+import { type ReadonlyURLSearchParams } from "next/navigation";
 import { type z } from "zod";
 
 export default function useParsedSearchParams<T extends z.ZodRawShape>(

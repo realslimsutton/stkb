@@ -1,25 +1,24 @@
 "use client";
 
-import {
-  useQueries,
-  useQueryClient,
-  useSuspenseQueries,
-} from "@tanstack/react-query";
-import * as React from "react";
-import { Item, MarketPrice } from "~/shop-titans/types";
-import lzString from "lz-string";
+import { useQueries } from "@tanstack/react-query";
 import localforage from "localforage";
-import { DataTableSkeleton } from "~/components/ui/datatable/skeleton";
+import lzString from "lz-string";
+import * as React from "react";
+import { Skeleton } from "~/components/ui/skeleton";
 import { roundNumber } from "~/lib/formatter";
 import {
   blueprintCategories,
   blueprintTypes,
   gradeValueMultipliers,
 } from "~/shop-titans/data/enums";
-import { Skeleton } from "~/components/ui/skeleton";
+import { type Item, type MarketPrice } from "~/shop-titans/types";
 
-type ReferenceId =
-  `${string}.${"normal" | "superior" | "flawless" | "epic" | "legendary"}`;
+export type ReferenceId = `${string}.${
+  | "normal"
+  | "superior"
+  | "flawless"
+  | "epic"
+  | "legendary"}`;
 
 export type MarketContextType = {
   items: (Omit<Item, "tradeMinMaxValue"> & {
@@ -61,7 +60,7 @@ export function MarketProvider({
     if (navigator.language) {
       setLanguage(navigator.language.slice(0, 2).toLowerCase());
     }
-  });
+  }, []);
 
   const [itemsQuery, pricesQuery] = useQueries({
     queries: [
@@ -82,7 +81,15 @@ export function MarketProvider({
       value={{
         items: itemsQuery.data ?? [],
         marketData: {
-          prices: pricesQuery.data?.prices ?? new Map(),
+          prices:
+            pricesQuery.data?.prices ??
+            new Map<
+              ReferenceId,
+              {
+                offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
+                request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
+              }
+            >(),
           lastUpdatedAt: pricesQuery.data?.lastUpdatedAt ?? undefined,
         },
       }}
@@ -109,12 +116,12 @@ export function MarketProvider({
 async function fetchMarketItems(
   language: string,
 ): Promise<MarketContextType["items"]> {
-  const cachedItems = (await localforage.getItem("market-items")) as
-    | string
-    | null;
+  const cachedItems = await localforage.getItem("market-items");
 
   if (cachedItems) {
-    return JSON.parse(lzString.decompress(cachedItems));
+    return JSON.parse(
+      lzString.decompress(cachedItems as string),
+    ) as MarketContextType["items"];
   }
 
   const translationsResponse = await fetch(
@@ -262,8 +269,8 @@ async function fetchMarketItems(
       ...baseItem,
       referenceId: `${key}.superior`,
       grade: "superior",
-      value: roundNumber(baseItem.value * gradeValueMultipliers["superior"]),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers["superior"]),
+      value: roundNumber(baseItem.value * gradeValueMultipliers.superior),
+      xp: roundNumber(baseItem.xp * gradeValueMultipliers.superior),
       minPrice: superiorMinPrice,
       maxPrice: superiorMaxPrice,
     });
@@ -272,8 +279,8 @@ async function fetchMarketItems(
       ...baseItem,
       referenceId: `${key}.flawless`,
       grade: "flawless",
-      value: roundNumber(baseItem.value * gradeValueMultipliers["flawless"]),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers["flawless"]),
+      value: roundNumber(baseItem.value * gradeValueMultipliers.flawless),
+      xp: roundNumber(baseItem.xp * gradeValueMultipliers.flawless),
       minPrice: flawlessMinPrice,
       maxPrice: flawlessMaxPrice,
     });
@@ -282,8 +289,8 @@ async function fetchMarketItems(
       ...baseItem,
       referenceId: `${key}.epic`,
       grade: "epic",
-      value: roundNumber(baseItem.value * gradeValueMultipliers["epic"]),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers["epic"]),
+      value: roundNumber(baseItem.value * gradeValueMultipliers.epic),
+      xp: roundNumber(baseItem.xp * gradeValueMultipliers.epic),
       minPrice: epicMinPrice,
       maxPrice: epicMaxPrice,
     });
@@ -292,8 +299,8 @@ async function fetchMarketItems(
       ...baseItem,
       referenceId: `${key}.legendary`,
       grade: "legendary",
-      value: roundNumber(baseItem.value * gradeValueMultipliers["legendary"]),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers["legendary"]),
+      value: roundNumber(baseItem.value * gradeValueMultipliers.legendary),
+      xp: roundNumber(baseItem.xp * gradeValueMultipliers.legendary),
       minPrice: legendaryMinPrice,
       maxPrice: legendaryMaxPrice,
     });
@@ -307,7 +314,7 @@ async function fetchMarketItems(
     return b.tier - a.tier;
   });
 
-  localforage.setItem(
+  await localforage.setItem(
     "market-items",
     lzString.compress(JSON.stringify(itemList)),
   );
@@ -317,9 +324,7 @@ async function fetchMarketItems(
 
 async function fetchMarketPrices(debug: boolean) {
   if (debug) {
-    const cachedPrices = (await localforage.getItem("market-prices")) as
-      | string
-      | null;
+    const cachedPrices = await localforage.getItem("market-prices");
 
     if (cachedPrices) {
       return {
@@ -329,7 +334,11 @@ async function fetchMarketPrices(debug: boolean) {
             offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
             request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
           }
-        >(JSON.parse(lzString.decompress(cachedPrices))),
+        >(
+          JSON.parse(
+            lzString.decompress(cachedPrices as string),
+          ) as MarketContextType["marketData"]["prices"],
+        ),
         lastUpdatedAt: new Date(),
       };
     }
@@ -339,8 +348,7 @@ async function fetchMarketPrices(debug: boolean) {
     cache: "no-store",
   });
 
-  const data = (await response.json()).data as MarketPrice[];
-
+  const data = ((await response.json()) as { data: MarketPrice[] | null }).data;
   if (!data) {
     return null;
   }
@@ -411,7 +419,7 @@ async function fetchMarketPrices(debug: boolean) {
   const lastUpdatedAt = new Date();
 
   if (debug) {
-    localforage.setItem(
+    await localforage.setItem(
       "market-prices",
       lzString.compress(JSON.stringify(Array.from(itemMap.entries()))),
     );

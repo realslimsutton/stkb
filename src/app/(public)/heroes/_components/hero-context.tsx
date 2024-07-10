@@ -2,11 +2,11 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { differenceInDays, differenceInMinutes } from "date-fns";
-import { InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel } from "drizzle-orm";
 import * as React from "react";
 import { toast } from "sonner";
-import { blueprints } from "~/server/db/schema";
-import { Adventurer } from "~/types";
+import { type blueprints } from "~/server/db/schema";
+import { type Adventurer } from "~/types";
 
 interface AdventurerWithItems extends Omit<Adventurer, "items"> {
   items: (InferSelectModel<typeof blueprints> & { tag1: string | null })[];
@@ -77,7 +77,8 @@ export function HeroProvider({ children }: { children: React.ReactNode }) {
     await queryClient.invalidateQueries({ queryKey: ["heroes"] });
 
     toast.success("Heroes successfully freshed");
-  }, [data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.heroesUpdatedAt]);
 
   return (
     <HeroContext.Provider

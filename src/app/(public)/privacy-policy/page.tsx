@@ -24,8 +24,8 @@ export default async function PrivacyPolicyPage() {
                 <span className="font-semibold">Personal Information:</span> We
                 collect your email address when you use certain features of our
                 website. This email address is passed directly to Kabam, the
-                developers of "Shop Titans," who then provide us with your game
-                account information.
+                developers of &quot;Shop Titans&quot;, who then provide us with
+                your game account information.
               </li>
 
               <li>
@@ -48,7 +48,7 @@ export default async function PrivacyPolicyPage() {
                 We use your email address to retrieve your game account
                 information from Kabam. This information is stored in an
                 encrypted cookie, which serves as your session and is essential
-                for the website's functionality. We do not store your email
+                for the website&apos;s functionality. We do not store your email
                 address or any game account information on our servers.
               </li>
 

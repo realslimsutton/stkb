@@ -1,11 +1,11 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { InferSelectModel } from "drizzle-orm";
+import { type ColumnDef } from "@tanstack/react-table";
+import { type InferSelectModel } from "drizzle-orm";
 import { XCircleIcon } from "lucide-react";
 import Image from "next/image";
 import {
-  ReadonlyURLSearchParams,
+  type ReadonlyURLSearchParams,
   usePathname,
   useRouter,
   useSearchParams,
@@ -43,13 +43,13 @@ import useDataTable from "~/hooks/use-data-table";
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 import { capitalise, formatArray, formatNumber } from "~/lib/formatter";
 import { createQueryString, wrapArray } from "~/lib/utils";
-import { blueprints } from "~/server/db/schema";
+import { type blueprints } from "~/server/db/schema";
 import {
   heroBaseClasses,
   heroClasses,
   heroSkillQualities,
 } from "~/shop-titans/data/enums";
-import { Adventurer } from "~/types";
+import { type Adventurer } from "~/types";
 import { HeroContext } from "./hero-context";
 
 interface Record extends Omit<Adventurer, "items"> {
@@ -79,7 +79,7 @@ const columns: ColumnDef<Record>[] = [
       <DataTableColumnHeader column={column} title="Class" />
     ),
     cell: ({ row }) => <>{capitalise(row.original.cls)}</>,
-    filterFn: (row, columnId, filterValue) => {
+    filterFn: (row, columnId, filterValue: string[]) => {
       if (!filterValue || filterValue?.length === 0) {
         return true;
       }
@@ -182,7 +182,7 @@ export default function HeroTable() {
         }),
       ),
     }),
-    [heroBaseClasses],
+    [],
   );
 
   const [search, setSearch] = React.useState(parsedSearchParams.search);

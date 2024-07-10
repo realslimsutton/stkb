@@ -14,22 +14,23 @@ export default async function AboutPage() {
         <Section title="Welcome to Shop Titans Knowledge Base (STKB)">
           <p>
             At Shop Titans Knowledge Base (STKB), we are passionate about
-            helping players of the popular game "Shop Titans" enhance their
-            gaming experience. Our mission is to provide a comprehensive and
-            user-friendly resource for all things related to the game, offering
-            a variety of tools and information to help you progress and succeed.
+            helping players of the popular game &quot;Shop Titans&quot; enhance
+            their gaming experience. Our mission is to provide a comprehensive
+            and user-friendly resource for all things related to the game,
+            offering a variety of tools and information to help you progress and
+            succeed.
           </p>
         </Section>
 
         <Section title="Who We Are">
           <p>
-            STKB was created by dedicated fans of "Shop Titans" who wanted to
-            share their knowledge and tips with the gaming community. Our team
-            consists of experienced players and developers who are committed to
-            delivering accurate and up-to-date content. We understand the
-            challenges and excitement of running a virtual shop, crafting
-            powerful items, and managing a team of heroes, and we aim to make
-            these experiences even more enjoyable for our users.
+            STKB was created by dedicated fans of &quot;Shop Titans&quot; who
+            wanted to share their knowledge and tips with the gaming community.
+            Our team consists of experienced players and developers who are
+            committed to delivering accurate and up-to-date content. We
+            understand the challenges and excitement of running a virtual shop,
+            crafting powerful items, and managing a team of heroes, and we aim
+            to make these experiences even more enjoyable for our users.
           </p>
         </Section>
 
@@ -38,8 +39,9 @@ export default async function AboutPage() {
             <li>
               <span className="font-semibold">Comprehensive Guides:</span> From
               beginner tips to advanced strategies, our guides cover all aspects
-              of "Shop Titans." Whether you're just starting out or looking to
-              optimize your gameplay, we have the resources you need.
+              of &quot;Shop Titans&quot;. Whether you&apos;re just starting out
+              or looking to optimize your gameplay, we have the resources you
+              need.
             </li>
 
             <li>
@@ -52,9 +54,9 @@ export default async function AboutPage() {
 
             <li>
               <span className="font-semibold">Regular Updates:</span> The world
-              of "Shop Titans" is constantly evolving, and so is our website. We
-              keep our content fresh with regular updates, new guides, and the
-              latest news from the game.
+              of &quot;Shop Titans&quot; is constantly evolving, and so is our
+              website. We keep our content fresh with regular updates, new
+              guides, and the latest news from the game.
             </li>
           </ul>
         </Section>

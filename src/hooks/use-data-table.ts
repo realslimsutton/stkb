@@ -5,10 +5,10 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  InitialTableState,
-  OnChangeFn,
+  type InitialTableState,
+  type OnChangeFn,
   useReactTable,
-  VisibilityState,
+  type VisibilityState,
   type ColumnDef,
   type PaginationState,
   type SortingState,
@@ -80,6 +80,8 @@ export default function useDataTable<TData, TValue>({
       pageIndex: 0,
       pageSize: pagination.pageSize,
     });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sorting]);
 
   React.useEffect(() => {
@@ -94,7 +96,7 @@ export default function useDataTable<TData, TValue>({
                 ? `${sort?.id}.${sort?.desc ? "desc" : "asc"}`
                 : null;
             })
-            .filter((x) => x !== null) as string[],
+            .filter((x) => x !== null),
         },
         searchParams,
       )}`,

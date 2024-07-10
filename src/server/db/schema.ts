@@ -1,17 +1,11 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-
 import {
-  type AnyPgColumn,
   bigint,
   bigserial,
   boolean,
   index,
   integer,
-  json,
   jsonb,
   pgTableCreator,
-  serial,
   smallint,
   text,
   unique,

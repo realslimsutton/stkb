@@ -6,7 +6,7 @@ import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
 } from "@radix-ui/react-icons";
-import { ColumnDef, Table } from "@tanstack/react-table";
+import { type ColumnDef, type Table } from "@tanstack/react-table";
 import {
   EllipsisVerticalIcon,
   ExternalLinkIcon,
@@ -44,22 +44,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import useDataTable from "~/hooks/use-data-table";
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 import { capitalise, formatNumber } from "~/lib/formatter";
 import { cn, createQueryString, wrapArray } from "~/lib/utils";
 import { blueprintTypes, gradeComparisons } from "~/shop-titans/data/enums";
-import { MarketContext, MarketContextType } from "./market-context";
+import { type MarketPrice } from "~/shop-titans/types";
+import {
+  MarketContext,
+  type MarketContextType,
+  type ReferenceId,
+} from "./market-context";
 
 type Record = MarketContextType["items"][0];
 
@@ -95,6 +91,7 @@ export default function MarketGrid() {
         value,
         label,
       })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [blueprintTypes],
   );
 
@@ -103,7 +100,17 @@ export default function MarketGrid() {
   const [types, setTypes] = React.useState(wrapArray(parsedSearchParams.types));
 
   const columns = React.useMemo(
-    () => getTableColumns(marketContext?.marketData.prices ?? new Map()),
+    () =>
+      getTableColumns(
+        marketContext?.marketData.prices ??
+          new Map<
+            ReferenceId,
+            {
+              offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
+              request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
+            }
+          >(),
+      ),
     [marketContext],
   );
 
@@ -152,7 +159,14 @@ export default function MarketGrid() {
     filterableColumns.type.setFilterValue(types);
   }, [filterableColumns, types]);
 
+  const [mounted, setMounted] = React.useState(false);
+
   React.useEffect(() => {
+    if (!mounted) {
+      setMounted(true);
+      return;
+    }
+
     router.push(
       `${pathname}?${createQueryString(
         {
@@ -215,7 +229,7 @@ function getTableColumns(
     },
     {
       accessorKey: "type",
-      filterFn: (row, columnId, filterValue) => {
+      filterFn: (row, columnId, filterValue: string[]) => {
         if (!filterValue || filterValue?.length === 0) {
           return true;
         }
@@ -225,7 +239,7 @@ function getTableColumns(
     },
     {
       accessorKey: "tier",
-      filterFn: (row, columnId, filterValue) => {
+      filterFn: (row, columnId, filterValue: string[]) => {
         if (!filterValue || filterValue?.length === 0) {
           return true;
         }
@@ -403,6 +417,7 @@ function MarketFiltersTrigger({
 }
 
 function MarketFiltersForm({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   table,
   tierFilterOptions,
   tiers,
@@ -482,6 +497,11 @@ function MarketFiltersForm({
   );
 }
 
+const LastUpdatedAt = React.memo(({ date }: { date: Date }) => (
+  <TimeAgo date={date} />
+));
+LastUpdatedAt.displayName = "LastUpdatedAt";
+
 function MarketItemGrid({
   table,
   marketDataPrices,
@@ -492,10 +512,6 @@ function MarketItemGrid({
   lastUpdated: Date;
 }) {
   const rows = table.getRowModel().rows;
-
-  const LastUpdatedAt = React.memo(({ date }: { date: Date }) => (
-    <TimeAgo date={date} />
-  ));
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -542,6 +558,7 @@ function MarketGridItem({
     }
 
     return marketDataPrices.get(`${item.uid}.${gradeComparison}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gradeComparisons, item.grade, marketDataPrices]);
 
   const shopArbitrage = React.useMemo(() => {
@@ -550,6 +567,7 @@ function MarketGridItem({
     }
 
     return item.value - (prices.offer.goldPrice ?? 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prices]);
 
   const marketArbitrage = React.useMemo(() => {
@@ -562,6 +580,7 @@ function MarketGridItem({
     }
 
     return (prices.request.goldPrice ?? item.value) - prices.offer.goldPrice;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prices]);
 
   const fusionArbitrage = React.useMemo(() => {
@@ -580,6 +599,7 @@ function MarketGridItem({
       (prices?.request?.gemsPrice ?? prices?.offer?.gemsPrice ?? 0) -
       comparisonOfferPrice
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comparisonPrices]);
 
   return (

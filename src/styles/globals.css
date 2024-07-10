@@ -60,17 +60,29 @@
 }
 
 .filter-superior {
+  filter: drop-shadow(0 0 14px #58fe99);
+}
+.dark .filter-superior {
   filter: drop-shadow(0 0 7px #58fe99);
 }
 
 .filter-flawless {
+  filter: drop-shadow(0 0 14px #56f9ff);
+}
+.dark .filter-flawless {
   filter: drop-shadow(0 0 7px #56f9ff);
 }
 
 .filter-epic {
+  filter: drop-shadow(0 0 14px #d86dfe);
+}
+.dark .filter-epic {
   filter: drop-shadow(0 0 7px #d86dfe);
 }
 
 .filter-legendary {
+  filter: drop-shadow(0 0 14px #ffe582);
+}
+.dark .filter-legendary {
   filter: drop-shadow(0 0 7px #ffe582);
 }

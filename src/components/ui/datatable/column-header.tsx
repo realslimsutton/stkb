@@ -2,10 +2,9 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CaretSortIcon,
-  EyeNoneIcon,
 } from "@radix-ui/react-icons";
 import { type Column } from "@tanstack/react-table";
-import { ListRestart, Minus, Undo } from "lucide-react";
+import { ListRestart } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import {

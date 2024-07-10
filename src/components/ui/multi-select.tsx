@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { Primitive } from "@radix-ui/react-primitive";
+import { type Primitive } from "@radix-ui/react-primitive";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { Check, ChevronsUpDown, X } from "lucide-react";
+import React from "react";
 import { createPortal } from "react-dom";
 
-import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import {
   Command,
@@ -24,6 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { cn } from "~/lib/utils";
 
 export interface MultiSelectOptionItem {
   value: string;
@@ -105,6 +105,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
         onValueChangeProp(state, items);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onValueChangeProp],
   );
 
@@ -138,7 +139,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   const handleDeselect = React.useCallback(
     (value: string, item: MultiSelectOptionItem) => {
       setValue((prev) => {
-        if (!prev || !prev.includes(value)) {
+        if (!prev?.includes(value)) {
           return prev;
         }
 
@@ -152,8 +153,8 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
 
   const contextValue = React.useMemo(() => {
     return {
-      value: value || [],
-      open: open || false,
+      value: value ?? [],
+      open: open ?? false,
       onSearch,
       filter,
       disabled,
@@ -162,6 +163,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
       onDeselect: handleDeselect,
       itemCache,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     value,
     open,
@@ -188,8 +190,9 @@ MultiSelect.displayName = "MultiSelect";
 
 type MultiSelectTriggerElement = React.ElementRef<typeof Primitive.div>;
 
-interface MultiSelectTriggerProps
-  extends React.ComponentPropsWithoutRef<typeof Primitive.div> {}
+type MultiSelectTriggerProps = React.ComponentPropsWithoutRef<
+  typeof Primitive.div
+>;
 
 const PreventClick = (e: React.MouseEvent | React.TouchEvent) => {
   e.preventDefault();
@@ -203,6 +206,7 @@ const MultiSelectTrigger = React.forwardRef<
   const { disabled } = useMultiSelect();
 
   return (
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     <PopoverPrimitive.Trigger ref={forwardedRef as any} asChild>
       <div
         aria-disabled={disabled}
@@ -240,6 +244,7 @@ const MultiSelectValue = React.forwardRef<
     { className, placeholder, maxDisplay, maxItemLength, ...props },
     forwardRef,
   ) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const { value, itemCache, onDeselect } = useMultiSelect();
     const [firstRendered, setFirstRendered] = React.useState(false);
 
@@ -272,7 +277,7 @@ const MultiSelectValue = React.forwardRef<
           {renderItems.map((value) => {
             const item = itemCache.get(value);
 
-            const content = item?.label || value;
+            const content = item?.label ?? value;
 
             const child =
               maxItemLength &&
@@ -324,11 +329,13 @@ const MultiSelectValue = React.forwardRef<
     );
   },
 );
+MultiSelectValue.displayName = "MultiSelectValue";
 
 const MultiSelectSearch = React.forwardRef<
   React.ElementRef<typeof CommandInput>,
   React.ComponentPropsWithoutRef<typeof CommandInput>
 >((props, ref) => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const { onSearch } = useMultiSelect();
 
   return <CommandInput ref={ref} {...props} onValueChange={onSearch} />;
@@ -351,8 +358,9 @@ const MultiSelectList = React.forwardRef<
 
 MultiSelectList.displayName = "MultiSelectList";
 
-interface MultiSelectContentProps
-  extends React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {}
+type MultiSelectContentProps = React.ComponentPropsWithoutRef<
+  typeof PopoverPrimitive.Content
+>;
 
 const MultiSelectContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
@@ -383,6 +391,7 @@ const MultiSelectContent = React.forwardRef<
           "z-50 w-full rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         )}
         style={
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           {
             "--radix-select-content-transform-origin":
               "var(--radix-popper-transform-origin)",
@@ -393,6 +402,7 @@ const MultiSelectContent = React.forwardRef<
             "--radix-select-trigger-width": "var(--radix-popper-anchor-width)",
             "--radix-select-trigger-height":
               "var(--radix-popper-anchor-height)",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any
         }
         {...props}
@@ -410,6 +420,7 @@ const MultiSelectContent = React.forwardRef<
     </PopoverPrimitive.Portal>
   );
 });
+MultiSelectContent.displayName = "MultiSelectContent";
 
 type MultiSelectItemProps = React.ComponentPropsWithoutRef<typeof CommandItem> &
   Partial<MultiSelectOptionItem> & {
@@ -437,7 +448,9 @@ const MultiSelectItem = React.forwardRef<
     const {
       value: contextValue,
       maxCount,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       onSelect,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       onDeselect,
       itemCache,
     } = useMultiSelect();
@@ -447,7 +460,7 @@ const MultiSelectItem = React.forwardRef<
         ? {
             value,
             label:
-              label || (typeof children === "string" ? children : undefined),
+              label ?? (typeof children === "string" ? children : undefined),
           }
         : undefined;
     }, [value, label, children]);
@@ -458,10 +471,11 @@ const MultiSelectItem = React.forwardRef<
       if (value) {
         itemCache.set(value, item!);
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selected, value, item]);
 
     const disabled = Boolean(
-      disabledProp ||
+      disabledProp ??
         (!selected && maxCount && contextValue.length >= maxCount),
     );
 
@@ -489,13 +503,14 @@ const MultiSelectItem = React.forwardRef<
         ref={forwardedRef}
       >
         <span className="mr-2 overflow-hidden text-ellipsis whitespace-nowrap">
-          {children || label || value}
+          {children ?? label ?? value}
         </span>
         {selected ? <Check className="ml-auto h-4 w-4 shrink-0" /> : null}
       </CommandItem>
     );
   },
 );
+MultiSelectItem.displayName = "MultiSelectItem";
 
 const MultiSelectGroup = React.forwardRef<
   React.ElementRef<typeof CommandGroup>,
@@ -559,7 +574,7 @@ const renderMultiSelectOptions = (list: MultiSelectOption[]) => {
     if ("children" in option) {
       return (
         <MultiSelectGroup
-          key={option.value || index}
+          key={option.value ?? index}
           value={option.value}
           heading={option.heading}
         >
@@ -578,14 +593,14 @@ const renderMultiSelectOptions = (list: MultiSelectOption[]) => {
 
 export {
   MultiSelect,
+  MultiSelectContent,
+  MultiSelectEmpty,
+  MultiSelectGroup,
+  MultiSelectItem,
+  MultiSelectList,
+  MultiSelectSearch,
+  MultiSelectSeparator,
   MultiSelectTrigger,
   MultiSelectValue,
-  MultiSelectSearch,
-  MultiSelectContent,
-  MultiSelectList,
-  MultiSelectItem,
-  MultiSelectGroup,
-  MultiSelectSeparator,
-  MultiSelectEmpty,
   renderMultiSelectOptions,
 };

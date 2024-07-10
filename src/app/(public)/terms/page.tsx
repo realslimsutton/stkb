@@ -29,10 +29,10 @@ export default async function TermsOfServicePage() {
           <Section title="Use of the Website">
             <p>
               STKB is provided free of charge for users to access various tools
-              and information related to the game "Shop Titans." You agree to
-              use our website only for lawful purposes and in a manner that does
-              not infringe the rights of, restrict, or inhibit anyone else's use
-              and enjoyment of the website.
+              and information related to the game &quot;Shop Titans.&quot; You
+              agree to use our website only for lawful purposes and in a manner
+              that does not infringe the rights of, restrict, or inhibit anyone
+              else&apos;s use and enjoyment of the website.
             </p>
           </Section>
 
@@ -55,10 +55,11 @@ export default async function TermsOfServicePage() {
           </Section>
 
           <Section title="Disclaimers and Limitation of Liability">
-            STKB is provided "as is" and without warranties of any kind, either
-            express or implied. We do not warrant that the website will be
-            uninterrupted or error-free. In no event will STKB be liable for any
-            damages arising from the use or inability to use our website.
+            STKB is provided &quot;as is&quot; and without warranties of any
+            kind, either express or implied. We do not warrant that the website
+            will be uninterrupted or error-free. In no event will STKB be liable
+            for any damages arising from the use or inability to use our
+            website.
           </Section>
 
           <Section title="External Links">
