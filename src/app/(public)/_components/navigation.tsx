@@ -323,6 +323,7 @@ export function MobileNavigation() {
           <Link
             href="/market"
             className="flex w-full items-center text-lg font-semibold"
+            onClick={() => setOpen(false)}
           >
             Market
           </Link>
