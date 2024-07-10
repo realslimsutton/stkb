@@ -23,7 +23,7 @@ export default function FrequentlyAskedQuestions() {
 
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
               <Link
-                href="#"
+                href="mailto:hello@stkb.app"
                 className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
               >
                 Contact us
@@ -40,8 +40,8 @@ export default function FrequentlyAskedQuestions() {
                 We don&apos;t store any personal data about you. When logging
                 in, your email address is set straight to Kabam&apos;s servers
                 and we don&apos;t store it in our database. Kabam will then
-                provide us with a token that&apos;s stored in a cookie to
-                authenticate you.
+                provide us with a token that&apos;s stored in your browser via
+                an encrypted cookie to authenticate you.
               </AccordionContent>
             </AccordionItem>
 

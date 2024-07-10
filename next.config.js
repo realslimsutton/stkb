@@ -44,6 +44,11 @@ const config = {
         destination: "/auth/login",
         permanent: true,
       },
+      {
+        source: "/contribute",
+        destination: "/",
+        permanent: false,
+      },
     ];
   },
   skipTrailingSlashRedirect: true,

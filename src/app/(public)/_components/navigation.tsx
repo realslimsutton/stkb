@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { logout } from "~/auth/utils";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
   Collapsible,
@@ -55,11 +56,6 @@ export function DesktopNavigation({ user }: { user: User | null }) {
 
   const isBlogPage = React.useMemo(
     () => isRouteActive(pathname, "/blog"),
-    [pathname],
-  );
-
-  const isContactPage = React.useMemo(
-    () => isRouteActive(pathname, "/contact"),
     [pathname],
   );
 
@@ -128,6 +124,7 @@ export function DesktopNavigation({ user }: { user: User | null }) {
                   href="#"
                   title="Your Champions"
                   active={isChampionPage}
+                  comingSoon={true}
                 >
                   Track your champion progression &amp; statistics.
                 </DesktopListItem>
@@ -136,6 +133,7 @@ export function DesktopNavigation({ user }: { user: User | null }) {
                   href="#"
                   title="Lineup Simulator"
                   active={isHeroSimulatorPage}
+                  comingSoon={true}
                 >
                   Simulate hero lineups.
                 </DesktopListItem>
@@ -172,7 +170,12 @@ export function DesktopNavigation({ user }: { user: User | null }) {
 
             <NavigationMenuContent>
               <ul className="grid w-[550px] grid-cols-2 p-2">
-                <DesktopListItem href="/" title="Blog" active={isBlogPage}>
+                <DesktopListItem
+                  href="#"
+                  title="Blog"
+                  active={isBlogPage}
+                  comingSoon={true}
+                >
                   Read our latest blog posts.
                 </DesktopListItem>
 
@@ -204,15 +207,10 @@ export function DesktopNavigation({ user }: { user: User | null }) {
           <NavigationMenuItem>
             <Button
               variant="link"
-              className={cn({
-                "hover:text-accent-foreground hover:no-underline focus:text-accent-foreground":
-                  true,
-                "text-muted-foreground": !isContactPage,
-                "text-accent-foreground": isContactPage,
-              })}
+              className="text-muted-foreground hover:text-accent-foreground hover:no-underline focus:text-accent-foreground"
               asChild
             >
-              <Link href="/contact">Contact</Link>
+              <Link href="mailto:hello@stkb.app">Contact</Link>
             </Button>
           </NavigationMenuItem>
 
@@ -262,8 +260,10 @@ export function DesktopNavigation({ user }: { user: User | null }) {
 }
 
 export function MobileNavigation() {
+  const [open, setOpen] = React.useState(false);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="lg:hidden">
           <MenuIcon className="h-6 w-6" />
@@ -281,15 +281,29 @@ export function MobileNavigation() {
 
             <CollapsibleContent>
               <div className="-mx-6 grid gap-6 bg-muted p-6">
-                <MobileListDropdownItem href="/heroes" title="Your Heroes">
+                <MobileListDropdownItem
+                  href="/heroes"
+                  title="Your Heroes"
+                  onClick={() => setOpen(false)}
+                >
                   Track your hero progression &amp; statistics.
                 </MobileListDropdownItem>
 
-                <MobileListDropdownItem href="#" title="Your Champions">
+                <MobileListDropdownItem
+                  href="#"
+                  title="Your Champions"
+                  onClick={() => setOpen(false)}
+                  comingSoon={true}
+                >
                   Track your champion progression &amp; statistics.
                 </MobileListDropdownItem>
 
-                <MobileListDropdownItem href="#" title="Lineup Simulator">
+                <MobileListDropdownItem
+                  href="#"
+                  title="Lineup Simulator"
+                  onClick={() => setOpen(false)}
+                  comingSoon={true}
+                >
                   Simulate hero lineups.
                 </MobileListDropdownItem>
 
@@ -321,11 +335,20 @@ export function MobileNavigation() {
 
             <CollapsibleContent>
               <div className="-mx-6 grid gap-6 bg-muted p-6">
-                <MobileListDropdownItem href="/" title="Blog">
+                <MobileListDropdownItem
+                  href="#"
+                  title="Blog"
+                  onClick={() => setOpen(false)}
+                  comingSoon={true}
+                >
                   Read our latest blog posts.
                 </MobileListDropdownItem>
 
-                <MobileListDropdownItem href="/#faq" title="FAQ">
+                <MobileListDropdownItem
+                  href="/#faq"
+                  title="FAQ"
+                  onClick={() => setOpen(false)}
+                >
                   Frequently asked questions.
                 </MobileListDropdownItem>
 
@@ -349,7 +372,7 @@ export function MobileNavigation() {
           </Collapsible>
 
           <Link
-            href="#"
+            href="mailto:hello@stkb.app"
             className="flex w-full items-center text-lg font-semibold"
           >
             Contact
@@ -362,59 +385,88 @@ export function MobileNavigation() {
 
 const DesktopListItem = React.forwardRef<
   React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a"> & LinkProps & { active: boolean }
->(({ className, title, children, target, active, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <Link
-          ref={ref}
-          target={target}
-          className={cn({
-            "block select-none space-y-1 rounded-md p-3 font-medium leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground":
-              true,
-            "text-accent-foreground": active,
-            [className ?? ""]: true,
-          })}
-          {...props}
-        >
-          <div className="flex items-center gap-1 text-sm leading-none">
-            {title}{" "}
-            {target === "_blank" && <ExternalLinkIcon className="h-4 w-4" />}
-          </div>
+  React.ComponentPropsWithoutRef<"a"> &
+    LinkProps & { active: boolean; comingSoon?: boolean }
+>(
+  (
+    {
+      className,
+      title,
+      children,
+      target,
+      active,
+      comingSoon = false,
+      ...props
+    },
+    ref,
+  ) => {
+    return (
+      <li>
+        <NavigationMenuLink asChild>
+          <Link
+            ref={ref}
+            target={target}
+            className={cn({
+              "block select-none space-y-1 rounded-md p-3 font-medium leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground":
+                true,
+              "text-accent-foreground": active,
+              [className ?? ""]: true,
+            })}
+            {...props}
+          >
+            <div className="flex flex-wrap items-center gap-1 text-sm leading-none">
+              {title}{" "}
+              {target === "_blank" && <ExternalLinkIcon className="h-4 w-4" />}
+              {comingSoon && (
+                <Badge variant="outline" className="bg-background">
+                  Coming soon
+                </Badge>
+              )}
+            </div>
 
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </Link>
-      </NavigationMenuLink>
-    </li>
-  );
-});
+            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+              {children}
+            </p>
+          </Link>
+        </NavigationMenuLink>
+      </li>
+    );
+  },
+);
 DesktopListItem.displayName = "DesktopListItem";
 
 const MobileListDropdownItem = React.forwardRef<
   React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a"> & LinkProps
->(({ className, title, children, target, ...props }, ref) => {
-  return (
-    <Link
-      ref={ref}
-      target={target}
-      className={cn("grid h-auto w-full justify-start gap-1", className)}
-      {...props}
-    >
-      <div className="flex items-center gap-1 text-sm font-medium leading-none">
-        {title}{" "}
-        {target === "_blank" && <ExternalLinkIcon className="h-4 w-4" />}
-      </div>
+  React.ComponentPropsWithoutRef<"a"> & LinkProps & { comingSoon?: boolean }
+>(
+  (
+    { className, title, children, target, comingSoon = false, ...props },
+    ref,
+  ) => {
+    return (
+      <Link
+        ref={ref}
+        target={target}
+        className={cn("grid h-auto w-full justify-start gap-1", className)}
+        {...props}
+      >
+        <div className="flex items-center gap-1 text-sm font-medium leading-none">
+          {title}{" "}
+          {target === "_blank" && <ExternalLinkIcon className="h-4 w-4" />}
+          {comingSoon && (
+            <Badge variant="outline" className="bg-background">
+              Coming soon
+            </Badge>
+          )}
+        </div>
 
-      <div className="text-sm leading-snug text-muted-foreground">
-        {children}
-      </div>
-    </Link>
-  );
-});
+        <div className="text-sm leading-snug text-muted-foreground">
+          {children}
+        </div>
+      </Link>
+    );
+  },
+);
 MobileListDropdownItem.displayName = "MobileListDropdownItem";
 
 function isRouteActive(pathname: string, routes: string | string[]) {

@@ -12,17 +12,12 @@ export default async function MarketPage() {
 
   return (
     <>
-      <div className="absolute h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] dark:hidden"></div>
-      <div className="absolute hidden h-full w-full bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] dark:block"></div>
+      <PageHeader>Market</PageHeader>
 
-      <div className="relative">
-        <PageHeader>Market</PageHeader>
-
-        <div className="container relative mx-auto">
-          <MarketProvider debug={isDev}>
-            <MarketGrid />
-          </MarketProvider>
-        </div>
+      <div className="container mx-auto">
+        <MarketProvider debug={isDev}>
+          <MarketGrid />
+        </MarketProvider>
       </div>
     </>
   );

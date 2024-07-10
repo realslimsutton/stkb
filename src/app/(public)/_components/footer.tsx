@@ -6,8 +6,8 @@ import { ThemeToggle } from "~/components/theme/toggle";
 
 export default function Footer() {
   return (
-    <footer>
-      <div className="container relative mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <footer className="relative bg-background">
+      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div>
             <Logo href="/" />
@@ -30,9 +30,9 @@ export default function Footer() {
               <p className="font-medium">Community</p>
 
               <nav className="mt-4 flex flex-col space-y-2 text-sm">
-                <FooterLink href="#" title="About" />
+                <FooterLink href="/about" title="About" />
 
-                <FooterLink href="#" title="Open Source" />
+                <FooterLink href="/contribute" title="Open Source" />
               </nav>
             </div>
 
@@ -58,7 +58,7 @@ export default function Footer() {
               <p className="font-medium">Helpful Links</p>
 
               <nav className="mt-4 flex flex-col space-y-2 text-sm">
-                <FooterLink href="#" title="Contact" />
+                <FooterLink href="mailto:hello@stkb.app" title="Contact" />
                 <FooterLink href="/#faq" title="FAQ" />
               </nav>
             </div>
@@ -67,8 +67,8 @@ export default function Footer() {
               <p className="font-medium">Legal</p>
 
               <nav className="mt-4 flex flex-col space-y-2 text-sm text-gray-500">
-                <FooterLink href="#" title="Privacy Policy" />
-                <FooterLink href="#" title="Terms &amp; Conditions" />
+                <FooterLink href="/privacy-policy" title="Privacy Policy" />
+                <FooterLink href="/terms" title="Terms" />
               </nav>
             </div>
           </div>
