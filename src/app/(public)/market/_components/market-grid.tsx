@@ -7,7 +7,11 @@ import {
   DoubleArrowRightIcon,
 } from "@radix-ui/react-icons";
 import { ColumnDef, Table } from "@tanstack/react-table";
-import { EllipsisVerticalIcon, ExternalLinkIcon } from "lucide-react";
+import {
+  EllipsisVerticalIcon,
+  ExternalLinkIcon,
+  FilterIcon,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -40,6 +44,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import useDataTable from "~/hooks/use-data-table";
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
@@ -164,6 +177,7 @@ export default function MarketGrid() {
   return (
     <div className="space-y-4">
       <MarketFilters
+        table={table}
         search={search}
         setSearch={setSearch}
         tierFilterOptions={tierFilterOptions}
@@ -235,7 +249,7 @@ function getTableColumns(
           return undefined;
         }
 
-        if (item.offer.goldPrice === null) {
+        if (item.offer.goldPrice === null || item.request.goldPrice === null) {
           return undefined;
         }
 
@@ -268,6 +282,7 @@ function getTableColumns(
 }
 
 function MarketFilters({
+  table,
   search,
   setSearch,
   tierFilterOptions,
@@ -277,6 +292,7 @@ function MarketFilters({
   types,
   setTypes,
 }: {
+  table: Table<Record>;
   search: string;
   setSearch: (value: string) => void;
   tierFilterOptions: { value: string; label: string }[];
@@ -302,6 +318,7 @@ function MarketFilters({
 
         <div className="flex items-center justify-end">
           <MarketFiltersTrigger
+            table={table}
             tierFilterOptions={tierFilterOptions}
             tiers={tiers}
             setTiers={setTiers}
@@ -316,6 +333,7 @@ function MarketFilters({
 }
 
 function MarketFiltersTrigger({
+  table,
   tierFilterOptions,
   tiers,
   setTiers,
@@ -323,6 +341,7 @@ function MarketFiltersTrigger({
   types,
   setTypes,
 }: {
+  table: Table<Record>;
   tierFilterOptions: { value: string; label: string }[];
   tiers: string[];
   setTiers: (value: string[]) => void;
@@ -338,11 +357,15 @@ function MarketFiltersTrigger({
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button className="w-full sm:w-auto">Filters</Button>
+          <Button className="w-full sm:w-auto">
+            <FilterIcon className="mr-2 h-4 w-4" />
+            Filter
+          </Button>
         </PopoverTrigger>
 
         <PopoverContent align="end" className="w-80">
           <MarketFiltersForm
+            table={table}
             tierFilterOptions={tierFilterOptions}
             tiers={tiers}
             setTiers={setTiers}
@@ -358,11 +381,15 @@ function MarketFiltersTrigger({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button className="w-full sm:w-auto">Filters</Button>
+        <Button className="w-full sm:w-auto">
+          <FilterIcon className="mr-2 h-4 w-4" />
+          Filter
+        </Button>
       </DrawerTrigger>
 
       <DrawerContent className="px-4 pb-6">
         <MarketFiltersForm
+          table={table}
           tierFilterOptions={tierFilterOptions}
           tiers={tiers}
           setTiers={setTiers}
@@ -376,6 +403,7 @@ function MarketFiltersTrigger({
 }
 
 function MarketFiltersForm({
+  table,
   tierFilterOptions,
   tiers,
   setTiers,
@@ -383,6 +411,7 @@ function MarketFiltersForm({
   types,
   setTypes,
 }: {
+  table: Table<Record>;
   tierFilterOptions: { value: string; label: string }[];
   tiers: string[];
   setTiers: (value: string[]) => void;
@@ -528,11 +557,11 @@ function MarketGridItem({
       return null;
     }
 
-    if (prices.offer.goldPrice === null) {
+    if (prices.offer.goldPrice === null || prices.request.goldPrice === null) {
       return null;
     }
 
-    return (prices.request.goldPrice ?? 0) - prices.offer.goldPrice;
+    return (prices.request.goldPrice ?? item.value) - prices.offer.goldPrice;
   }, [prices]);
 
   const fusionArbitrage = React.useMemo(() => {
