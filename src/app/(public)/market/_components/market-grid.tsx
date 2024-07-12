@@ -57,6 +57,13 @@ import { cn, createQueryString, wrapArray } from "~/lib/utils";
 import { blueprintTypes, gradeComparisons } from "~/shop-titans/data/enums";
 import { type MarketPricesContextType } from "~/components/context/market-prices-context";
 import { Skeleton } from "~/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 type Record = MarketItemsContextType["items"][0];
 
@@ -140,6 +147,8 @@ export default function MarketGrid() {
       type: table.getColumn("type")!,
       marketArbitrage: table.getColumn("marketArbitrage")!,
       shopArbitrage: table.getColumn("shopArbitrage")!,
+      xp: table.getColumn("xp")!,
+      craftXp: table.getColumn("craftXp")!,
     };
   }, [table]);
 
@@ -301,10 +310,10 @@ function getTableColumns(
       },
     },
     {
-      accessorKey: "experience",
+      accessorKey: "xp",
     },
     {
-      accessorKey: "craftExperience",
+      accessorKey: "craftXp",
     },
   ];
 }
@@ -387,7 +396,7 @@ function MarketFiltersTrigger({
         <PopoverTrigger asChild>
           <Button className="w-full sm:w-auto">
             <FilterIcon className="mr-2 h-4 w-4" />
-            Filter
+            Filter &amp; Sort
           </Button>
         </PopoverTrigger>
 
@@ -448,8 +457,83 @@ function MarketFiltersForm({
   types: string[];
   setTypes: (value: string[]) => void;
 }) {
+  const [sorting, setSorting] = React.useState<string[]>(() =>
+    table
+      .getState()
+      .sorting.map((sort) => `${sort.id}.${sort.desc ? "desc" : "asc"}`),
+  );
+
+  const onSortChange = React.useCallback(
+    (values: string[]) => {
+      if (!values.length) {
+        table.resetSorting();
+        setSorting([]);
+        return;
+      }
+
+      const sortedColumns: string[] = [];
+      for (const value of values) {
+        const [columnName, direction] = value.split(".");
+        if (sortedColumns.includes(columnName!)) {
+          continue;
+        }
+
+        const column = table.getColumn(columnName!);
+        column?.toggleSorting(direction === "desc", true);
+
+        sortedColumns.push(value);
+      }
+
+      setSorting(sortedColumns);
+    },
+    [table],
+  );
   return (
     <div className="space-y-4">
+      <div>
+        <Label className="space-y-2">
+          <span>Sort</span>
+
+          <MultiSelect value={sorting} onValueChange={onSortChange}>
+            <MultiSelectTrigger>
+              <MultiSelectValue placeholder="Sort items..." />
+            </MultiSelectTrigger>
+
+            <MultiSelectContent>
+              <MultiSelectSearch />
+
+              <MultiSelectList>
+                <MultiSelectItem value="name.asc">
+                  Name: Ascending
+                </MultiSelectItem>
+                <MultiSelectItem value="name.desc">
+                  Name: Descending
+                </MultiSelectItem>
+
+                <MultiSelectItem value="value.asc">
+                  Value: Ascending
+                </MultiSelectItem>
+                <MultiSelectItem value="value.desc">
+                  Value: Descending
+                </MultiSelectItem>
+
+                <MultiSelectItem value="xp.asc">XP: Ascending</MultiSelectItem>
+                <MultiSelectItem value="xp.desc">
+                  XP: Descending
+                </MultiSelectItem>
+
+                <MultiSelectItem value="craftXp.asc">
+                  Worker XP: Ascending
+                </MultiSelectItem>
+                <MultiSelectItem value="craftXp.desc">
+                  Worker XP: Descending
+                </MultiSelectItem>
+              </MultiSelectList>
+            </MultiSelectContent>
+          </MultiSelect>
+        </Label>
+      </div>
+
       <div>
         <Label className="space-y-2">
           <span>Tiers</span>
