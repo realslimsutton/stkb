@@ -7,7 +7,7 @@ import {
   DoubleArrowRightIcon,
 } from "@radix-ui/react-icons";
 import {
-  SortingState,
+  type SortingState,
   type ColumnDef,
   type Table,
 } from "@tanstack/react-table";
@@ -66,12 +66,23 @@ import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 import { capitalise, formatArray, formatNumber } from "~/lib/formatter";
 import { cn, createQueryString, wrapArray } from "~/lib/utils";
 import {
+  getFusionArbitrage,
+  getShopArbitrage,
+} from "~/shop-titans/data/calculations";
+import {
   blueprintTypes,
   gradeComparisons,
   itemGrades,
 } from "~/shop-titans/data/enums";
+import { getMarketArbitrage } from "../../../../shop-titans/data/calculations";
 
-type Record = MarketItemsContextType["items"][0];
+type Record = MarketItemsContextType["items"][0] & {
+  shopArbitrage?: number;
+  marketArbitrage?: number;
+  fusionArbitrage?: number;
+  requestQuantity?: number;
+  offerQuantity?: number;
+};
 
 const searchParamsSchema = z.object({
   search: z.string().optional().default("").catch(""),
@@ -80,6 +91,63 @@ const searchParamsSchema = z.object({
   sort: z.string().or(z.array(z.string())).optional().default([]).catch([]),
   grades: z.array(z.string()).or(z.string()).optional().default([]).catch([]),
 });
+
+const columns: ColumnDef<Record>[] = [
+  {
+    accessorKey: "name",
+  },
+  {
+    accessorKey: "type",
+    filterFn: (row, columnId, filterValue: string[]) => {
+      if (!filterValue || filterValue?.length === 0) {
+        return true;
+      }
+
+      return filterValue.includes(row.original.type);
+    },
+  },
+  {
+    accessorKey: "tier",
+    filterFn: (row, columnId, filterValue: string[]) => {
+      if (!filterValue || filterValue?.length === 0) {
+        return true;
+      }
+
+      return filterValue.includes(row.original.tier.toString());
+    },
+  },
+  {
+    accessorKey: "value",
+  },
+  {
+    accessorKey: "marketArbitrage",
+    sortUndefined: "last",
+  },
+  {
+    accessorKey: "shopArbitrage",
+    sortUndefined: "last",
+  },
+  {
+    accessorKey: "fusionArbitrage",
+    sortUndefined: "last",
+  },
+  {
+    accessorKey: "xp",
+  },
+  {
+    accessorKey: "craftXp",
+  },
+  {
+    accessorKey: "grade",
+    filterFn: (row, columnId, filterValue: string[]) => {
+      if (!filterValue || filterValue?.length === 0) {
+        return true;
+      }
+
+      return filterValue.includes(row.original.grade);
+    },
+  },
+];
 
 export default function MarketGrid() {
   const router = useRouter();
@@ -127,17 +195,13 @@ export default function MarketGrid() {
     wrapArray(parsedSearchParams.grades),
   );
 
-  const columns = React.useMemo(
-    () =>
-      getTableColumns(
-        marketPricesContext?.prices ??
-          (new Map() as MarketPricesContextType["prices"]),
-      ),
-    [marketPricesContext],
+  const itemsWithPrices = React.useMemo(
+    () => getItemsWithPrices(marketItemsContext, marketPricesContext),
+    [marketItemsContext, marketPricesContext],
   );
 
   const { table } = useDataTable({
-    data: marketItemsContext?.items ?? [],
+    data: itemsWithPrices,
     columns,
     defaultPerPage: 12,
     disablePerPage: true,
@@ -163,51 +227,27 @@ export default function MarketGrid() {
     },
   });
 
-  const filterableColumns = React.useMemo(() => {
-    return {
-      name: table.getColumn("name")!,
-      tier: table.getColumn("tier")!,
-      type: table.getColumn("type")!,
-      marketArbitrage: table.getColumn("marketArbitrage")!,
-      shopArbitrage: table.getColumn("shopArbitrage")!,
-      xp: table.getColumn("xp")!,
-      craftXp: table.getColumn("craftXp")!,
-      grade: table.getColumn("grade")!,
-    };
-  }, [table]);
-
   React.useEffect(() => {
-    filterableColumns.name.setFilterValue(search);
+    table.getColumn("name")!.setFilterValue(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterableColumns, search]);
+  }, [search]);
 
   React.useEffect(() => {
-    filterableColumns.tier.setFilterValue(tiers);
+    table.getColumn("tier")!.setFilterValue(tiers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterableColumns, tiers]);
+  }, [tiers]);
 
   React.useEffect(() => {
-    filterableColumns.type.setFilterValue(types);
+    table.getColumn("type")!.setFilterValue(types);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterableColumns, types]);
+  }, [types]);
 
   React.useEffect(() => {
-    filterableColumns.type.setFilterValue(types);
+    table.getColumn("grade")!.setFilterValue(grades);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterableColumns, types]);
+  }, [grades]);
 
   React.useEffect(() => {
-    filterableColumns.grade.setFilterValue(grades);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterableColumns, grades]);
-
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
     const sortedColumns: SortingState = [];
     for (const sort of sorting) {
       const [columnName, direction] = sort.split(".");
@@ -225,11 +265,11 @@ export default function MarketGrid() {
       });
     }
 
-    console.log([sorting, sortedColumns]);
-
     table.setSorting(sortedColumns);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sorting]);
+
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     if (!mounted) {
@@ -260,7 +300,9 @@ export default function MarketGrid() {
   }, [search, tiers, types, grades]);
 
   if (
-    marketItemsContext?.isLoadingItems ??
+    !marketItemsContext?.items ||
+    !marketPricesContext?.prices ||
+    marketItemsContext?.isLoadingItems ||
     marketPricesContext?.isLoadingPrices
   ) {
     return (
@@ -281,7 +323,6 @@ export default function MarketGrid() {
   return (
     <div className="space-y-4">
       <MarketFilters
-        table={table}
         search={search}
         setSearch={setSearch}
         tierFilterOptions={tierFilterOptions}
@@ -311,133 +352,34 @@ export default function MarketGrid() {
   );
 }
 
-function getTableColumns(
-  prices: MarketPricesContextType["prices"],
-): ColumnDef<Record>[] {
-  return [
-    {
-      accessorKey: "image",
-    },
-    {
-      accessorKey: "name",
-    },
-    {
-      accessorKey: "type",
-      filterFn: (row, columnId, filterValue: string[]) => {
-        if (!filterValue || filterValue?.length === 0) {
-          return true;
-        }
+function getItemsWithPrices(
+  marketItemsContext: MarketItemsContextType | null,
+  marketPricesContext: MarketPricesContextType | null,
+): Record[] {
+  return (marketItemsContext?.items ?? []).map((item) => {
+    const prices = marketPricesContext?.prices.get(item.referenceId);
+    const gradeComparison = gradeComparisons[
+      item.grade
+    ] as keyof typeof gradeComparisons;
 
-        return filterValue.includes(row.original.type);
-      },
-    },
-    {
-      accessorKey: "tier",
-      filterFn: (row, columnId, filterValue: string[]) => {
-        if (!filterValue || filterValue?.length === 0) {
-          return true;
-        }
+    const comparisonPrices = gradeComparison
+      ? marketPricesContext?.prices.get(`${item.uid}.${gradeComparison}`)
+      : undefined;
 
-        return filterValue.includes(row.original.tier.toString());
-      },
-    },
-    {
-      accessorKey: "value",
-    },
-    {
-      id: "marketArbitrage",
-      sortUndefined: "last",
-      accessorFn: (row) => {
-        const item = prices.get(row.referenceId);
-        if (!item) {
-          return undefined;
-        }
+    const shopArbitrage = getShopArbitrage(item, prices);
+    const marketArbitrage = getMarketArbitrage(prices);
+    const fusionArbitrage = getFusionArbitrage(prices, comparisonPrices);
 
-        if (!item.offer || !item.request) {
-          return undefined;
-        }
-
-        if (item.offer.goldPrice === null || item.request.goldPrice === null) {
-          return undefined;
-        }
-
-        return (item.request.goldPrice ?? 0) - (item.offer.goldPrice ?? 0);
-      },
-    },
-    {
-      id: "shopArbitrage",
-      sortUndefined: "last",
-      accessorFn: (row) => {
-        const item = prices.get(row.referenceId);
-        if (!item) {
-          return undefined;
-        }
-
-        if (!item.offer || item.offer.goldQty === 0) {
-          return undefined;
-        }
-
-        return row.value - (item.offer.goldPrice ?? 0);
-      },
-    },
-    {
-      id: "fusionArbitrage",
-      sortUndefined: "last",
-      accessorFn: (row) => {
-        const item = prices.get(row.referenceId);
-        if (!item) {
-          return undefined;
-        }
-
-        const gradeComparison = gradeComparisons[
-          row.grade
-        ] as keyof typeof gradeComparisons;
-
-        if (!gradeComparison) {
-          return undefined;
-        }
-
-        const comparisonPrices = prices.get(`${row.uid}.${gradeComparison}`);
-
-        if ((!item?.request && !item?.offer) || !comparisonPrices?.offer) {
-          return null;
-        }
-
-        // Needs 5 items to fuse into a higher tier
-        if (comparisonPrices.offer.gemsQty < 5) {
-          return null;
-        }
-
-        const comparisonOfferPrice =
-          (comparisonPrices.offer.gemsPrice ?? 0) * 5;
-
-        return (
-          (item?.request?.gemsPrice ?? item?.offer?.gemsPrice ?? 0) -
-          comparisonOfferPrice
-        );
-      },
-    },
-    {
-      accessorKey: "xp",
-    },
-    {
-      accessorKey: "craftXp",
-    },
-    {
-      accessorKey: "grade",
-      filterFn: (row, columnId, filterValue: string[]) => {
-        if (!filterValue || filterValue?.length === 0) {
-          return true;
-        }
-
-        return filterValue.includes(row.original.grade);
-      },
-    },
-  ];
+    return {
+      ...item,
+      shopArbitrage,
+      marketArbitrage,
+      fusionArbitrage,
+    };
+  });
 }
 
 function MarketFilters({
-  table,
   search,
   setSearch,
   tierFilterOptions,
@@ -452,7 +394,6 @@ function MarketFilters({
   grades,
   setGrades,
 }: {
-  table: Table<Record>;
   search: string;
   setSearch: (value: string) => void;
   tierFilterOptions: { value: string; label: string }[];
@@ -484,7 +425,6 @@ function MarketFilters({
 
           <div className="flex items-center justify-end">
             <MarketFiltersTrigger
-              table={table}
               tierFilterOptions={tierFilterOptions}
               tiers={tiers}
               setTiers={setTiers}
@@ -518,7 +458,6 @@ function MarketFilters({
 }
 
 function MarketFiltersTrigger({
-  table,
   tierFilterOptions,
   tiers,
   setTiers,
@@ -531,7 +470,6 @@ function MarketFiltersTrigger({
   grades,
   setGrades,
 }: {
-  table: Table<Record>;
   tierFilterOptions: { value: string; label: string }[];
   tiers: string[];
   setTiers: (value: string[]) => void;
@@ -560,7 +498,6 @@ function MarketFiltersTrigger({
 
         <PopoverContent align="end" className="w-80">
           <MarketFiltersForm
-            table={table}
             tierFilterOptions={tierFilterOptions}
             tiers={tiers}
             setTiers={setTiers}
@@ -583,13 +520,12 @@ function MarketFiltersTrigger({
       <DrawerTrigger asChild>
         <Button className="w-full sm:w-auto">
           <FilterIcon className="mr-2 h-4 w-4" />
-          Filter
+          Filter &amp; Sort
         </Button>
       </DrawerTrigger>
 
       <DrawerContent className="px-4 pb-6">
         <MarketFiltersForm
-          table={table}
           tierFilterOptions={tierFilterOptions}
           tiers={tiers}
           setTiers={setTiers}
@@ -608,7 +544,6 @@ function MarketFiltersTrigger({
 }
 
 function MarketFiltersForm({
-  table,
   tierFilterOptions,
   tiers,
   setTiers,
@@ -621,7 +556,6 @@ function MarketFiltersForm({
   grades,
   setGrades,
 }: {
-  table: Table<Record>;
   tierFilterOptions: { value: string; label: string }[];
   tiers: string[];
   setTiers: (value: string[]) => void;
@@ -953,12 +887,10 @@ function MarketItemGrid({
   table: Table<Record>;
   marketDataPrices: MarketPricesContextType["prices"];
 }) {
-  const rows = table.getRowModel().rows;
-
   return (
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {rows?.length ? (
-        rows.map((row) => {
+      {table.getRowModel().rows.length ? (
+        table.getRowModel().rows.map((row) => {
           return (
             <MarketGridItem
               key={row.id}

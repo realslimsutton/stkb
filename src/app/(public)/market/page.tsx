@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export default async function MarketPage() {
-  const isDev = env.NODE_ENV === "development";
+  const isDev = false; //env.NODE_ENV === "development";
 
   return (
     <>
