@@ -11,6 +11,8 @@ import {
   gradeValueMultipliers,
 } from "~/shop-titans/data/enums";
 import { roundNumber } from "~/lib/formatter";
+import { env } from "~/env";
+import { toast } from "sonner";
 
 export type ReferenceId = `${string}.${
   | "normal"
@@ -75,208 +77,245 @@ export function MarketItemsProvider(props: React.HTMLAttributes<HTMLElement>) {
 }
 
 async function fetchMarketItems(language: string): Promise<MarketItem[]> {
-  const cachedItems = await localforage.getItem(`market.items.${language}`);
+  let toastId: string | number | undefined;
 
-  if (cachedItems) {
-    return JSON.parse(
-      lzString.decompress(cachedItems as string),
-    ) as MarketItem[];
-  }
+  try {
+    const cachedVersion = await localforage.getItem<string>(
+      "market.items.version",
+    );
 
-  const translationsResponse = await fetch(
-    `/api/smartytitans/assets/gameData/texts_${language}.json`,
-  );
+    if (cachedVersion === env.NEXT_PUBLIC_MARKET_VERSION) {
+      const cachedItems = await localforage.getItem<string>(
+        `market.items.${language}`,
+      );
 
-  const translations =
-    (
-      (await translationsResponse.json()) as {
-        texts: Record<string, string>;
+      if (cachedItems) {
+        return JSON.parse(lzString.decompress(cachedItems)) as MarketItem[];
       }
-    ).texts ?? {};
-
-  const itemsResponse = await fetch(
-    "/api/smartytitans/assets/gameData/items.json",
-  );
-
-  const items = (await itemsResponse.json()) as Record<string, Item>;
-
-  const itemList: MarketItem[] = [];
-
-  for (const key in items) {
-    const item = items[key]!;
-
-    if (!item.tradeMinMaxValue) {
-      continue;
+    } else {
+      await localforage.removeItem(`market.items.${language}`);
+      await localforage.removeItem("market.items.version");
     }
 
-    const [
-      normalMinPrice,
-      superiorMinPrice,
-      flawlessMinPrice,
-      epicMinPrice,
-      legendaryMinPrice,
-      normalMaxPrice,
-      superiorMaxPrice,
-      flawlessMaxPrice,
-      epicMaxPrice,
-      legendaryMaxPrice,
-    ] = item.tradeMinMaxValue.replace(";", ",").split(",").map(parseInt);
+    toastId = toast.loading(`Loading ${language} translations...`);
 
-    const baseItem = {
-      uid: item.uid,
-      typeName: blueprintTypes[item.type as keyof typeof blueprintTypes],
-      category:
-        blueprintCategories[item.type as keyof typeof blueprintCategories],
-      name: translations[`${key}_name`] ?? "Unknown",
-      description: translations[`${key}_desc`] ?? "Unknown",
-      level: item.level,
-      type: item.type,
-      subtype: item.subtype,
-      xp: item.xp,
-      craftXp: item.craftXp,
-      value: item.value,
-      favor: item.favor,
-      time: item.time,
-      atk: item.atk,
-      def: item.def,
-      hp: item.hp,
-      eva: item.eva,
-      crit: item.crit,
-      excl: item.excl,
-      tier: item.tier,
-      subtier: item.subtier,
-      combo: item.combo,
-      worker1: item.worker1,
-      worker2: item.worker2,
-      worker3: item.worker3,
-      w1BuildingReq: item.w1BuildingReq,
-      w2BuildingReq: item.w2BuildingReq,
-      w3BuildingReq: item.w3BuildingReq,
-      resource1: item.resource1,
-      r1Qty: item.r1Qty,
-      resource2: item.resource2,
-      r2Qty: item.r2Qty,
-      resource3: item.resource3,
-      r3Qty: item.r3Qty,
-      component1: item.component1,
-      c1Qty: item.c1Qty,
-      c1Tags: item.c1Tags,
-      component2: item.component2,
-      c2Qty: item.c2Qty,
-      c2Tags: item.c2Tags,
-      u1Req: item.u1Req,
-      u2Req: item.u2Req,
-      u3Req: item.u3Req,
-      u4Req: item.u4Req,
-      u5Req: item.u5Req,
-      upgrade1: item.upgrade1,
-      upgrade2: item.upgrade2,
-      upgrade3: item.upgrade3,
-      upgrade4: item.upgrade4,
-      upgrade5: item.upgrade5,
-      upgradeBonus: item.upgradeBonus,
-      supgrade1: item.supgrade1,
-      supgrade2: item.supgrade2,
-      supgrade3: item.supgrade3,
-      su1Cost: item.su1Cost,
-      su2Cost: item.su2Cost,
-      su3Cost: item.su3Cost,
-      restrict: item.restrict,
-      reqTags: item.reqTags,
-      tagIndex: item.tagIndex,
-      elements: item.elements,
-      skill: item.skill,
-      lTag2: item.lTag2,
-      lTag3: item.lTag3,
-      elementAffinity: item.elementAffinity,
-      spiritAffinity: item.spiritAffinity,
-      tag: item.tag,
-      discount: item.discount,
-      surcharge: item.surcharge,
-      suggest: item.suggest,
-      speedup: item.speedup,
-      buyAnimIdOverride: item.buyAnimIdOverride,
-      questAnimIdOverride: item.questAnimIdOverride,
-      slotOverride: item.slotOverride,
-      soundType: item.soundType,
-      unlock: item.unlock,
-      chest: item.chest,
-      firstOfLine: item.firstOfLine,
-      prohibited: item.prohibited,
-      hasChinaTexture: item.hasChinaTexture,
-      nonCraftable: item.nonCraftable,
-      releaseAt: item.releaseAt,
-      shardPrice: item.shardPrice,
-      capriceDelay: item.capriceDelay,
-      EnchantedItemTexturer: item.EnchantedItemTexturer,
-      isTitanItem: item.isTitanItem,
-    };
+    const translationsResponse = await fetch(
+      `/api/smartytitans/assets/gameData/texts_${language}.json`,
+    );
 
-    if (!baseItem.typeName || !baseItem.category) {
-      continue;
+    const translations =
+      (
+        (await translationsResponse.json()) as {
+          texts: Record<string, string>;
+        }
+      ).texts ?? {};
+
+    toast.loading("Loading market items...", {
+      id: toastId,
+    });
+
+    const itemsResponse = await fetch(
+      "/api/smartytitans/assets/gameData/items.json",
+    );
+
+    const items = (await itemsResponse.json()) as Record<string, Item>;
+
+    const itemList: MarketItem[] = [];
+
+    for (const key in items) {
+      const item = items[key]!;
+
+      if (!item.tradeMinMaxValue) {
+        continue;
+      }
+
+      const [
+        normalMinPrice,
+        superiorMinPrice,
+        flawlessMinPrice,
+        epicMinPrice,
+        legendaryMinPrice,
+        normalMaxPrice,
+        superiorMaxPrice,
+        flawlessMaxPrice,
+        epicMaxPrice,
+        legendaryMaxPrice,
+      ] = item.tradeMinMaxValue.replace(";", ",").split(",").map(parseInt);
+
+      const baseItem = {
+        uid: item.uid,
+        typeName: blueprintTypes[item.type as keyof typeof blueprintTypes],
+        category:
+          blueprintCategories[item.type as keyof typeof blueprintCategories],
+        name: translations[`${key}_name`] ?? "Unknown",
+        description: translations[`${key}_desc`] ?? "Unknown",
+        level: item.level,
+        type: item.type,
+        subtype: item.subtype,
+        xp: item.xp,
+        craftXp: item.craftXp,
+        value: item.value,
+        favor: item.favor,
+        time: item.time,
+        atk: item.atk,
+        def: item.def,
+        hp: item.hp,
+        eva: item.eva,
+        crit: item.crit,
+        excl: item.excl,
+        tier: item.tier,
+        subtier: item.subtier,
+        combo: item.combo,
+        worker1: item.worker1,
+        worker2: item.worker2,
+        worker3: item.worker3,
+        w1BuildingReq: item.w1BuildingReq,
+        w2BuildingReq: item.w2BuildingReq,
+        w3BuildingReq: item.w3BuildingReq,
+        resource1: item.resource1,
+        r1Qty: item.r1Qty,
+        resource2: item.resource2,
+        r2Qty: item.r2Qty,
+        resource3: item.resource3,
+        r3Qty: item.r3Qty,
+        component1: item.component1,
+        c1Qty: item.c1Qty,
+        c1Tags: item.c1Tags,
+        component2: item.component2,
+        c2Qty: item.c2Qty,
+        c2Tags: item.c2Tags,
+        u1Req: item.u1Req,
+        u2Req: item.u2Req,
+        u3Req: item.u3Req,
+        u4Req: item.u4Req,
+        u5Req: item.u5Req,
+        upgrade1: item.upgrade1,
+        upgrade2: item.upgrade2,
+        upgrade3: item.upgrade3,
+        upgrade4: item.upgrade4,
+        upgrade5: item.upgrade5,
+        upgradeBonus: item.upgradeBonus,
+        supgrade1: item.supgrade1,
+        supgrade2: item.supgrade2,
+        supgrade3: item.supgrade3,
+        su1Cost: item.su1Cost,
+        su2Cost: item.su2Cost,
+        su3Cost: item.su3Cost,
+        restrict: item.restrict,
+        reqTags: item.reqTags,
+        tagIndex: item.tagIndex,
+        elements: item.elements,
+        skill: item.skill,
+        lTag2: item.lTag2,
+        lTag3: item.lTag3,
+        elementAffinity: item.elementAffinity,
+        spiritAffinity: item.spiritAffinity,
+        tag: item.tag,
+        discount: item.discount,
+        surcharge: item.surcharge,
+        suggest: item.suggest,
+        speedup: item.speedup,
+        buyAnimIdOverride: item.buyAnimIdOverride,
+        questAnimIdOverride: item.questAnimIdOverride,
+        slotOverride: item.slotOverride,
+        soundType: item.soundType,
+        unlock: item.unlock,
+        chest: item.chest,
+        firstOfLine: item.firstOfLine,
+        prohibited: item.prohibited,
+        hasChinaTexture: item.hasChinaTexture,
+        nonCraftable: item.nonCraftable,
+        releaseAt: item.releaseAt,
+        shardPrice: item.shardPrice,
+        capriceDelay: item.capriceDelay,
+        EnchantedItemTexturer: item.EnchantedItemTexturer,
+        isTitanItem: item.isTitanItem,
+      };
+
+      if (!baseItem.typeName || !baseItem.category) {
+        continue;
+      }
+
+      itemList.push({
+        ...baseItem,
+        referenceId: `${key}.normal`,
+        grade: "normal",
+        minPrice: normalMinPrice,
+        maxPrice: normalMaxPrice,
+      });
+
+      itemList.push({
+        ...baseItem,
+        referenceId: `${key}.superior`,
+        grade: "superior",
+        value: roundNumber(baseItem.value * gradeValueMultipliers.superior),
+        xp: roundNumber(baseItem.xp * gradeValueMultipliers.superior),
+        minPrice: superiorMinPrice,
+        maxPrice: superiorMaxPrice,
+      });
+
+      itemList.push({
+        ...baseItem,
+        referenceId: `${key}.flawless`,
+        grade: "flawless",
+        value: roundNumber(baseItem.value * gradeValueMultipliers.flawless),
+        xp: roundNumber(baseItem.xp * gradeValueMultipliers.flawless),
+        minPrice: flawlessMinPrice,
+        maxPrice: flawlessMaxPrice,
+      });
+
+      itemList.push({
+        ...baseItem,
+        referenceId: `${key}.epic`,
+        grade: "epic",
+        value: roundNumber(baseItem.value * gradeValueMultipliers.epic),
+        xp: roundNumber(baseItem.xp * gradeValueMultipliers.epic),
+        minPrice: epicMinPrice,
+        maxPrice: epicMaxPrice,
+      });
+
+      itemList.push({
+        ...baseItem,
+        referenceId: `${key}.legendary`,
+        grade: "legendary",
+        value: roundNumber(baseItem.value * gradeValueMultipliers.legendary),
+        xp: roundNumber(baseItem.xp * gradeValueMultipliers.legendary),
+        minPrice: legendaryMinPrice,
+        maxPrice: legendaryMaxPrice,
+      });
     }
 
-    itemList.push({
-      ...baseItem,
-      referenceId: `${key}.normal`,
-      grade: "normal",
-      minPrice: normalMinPrice,
-      maxPrice: normalMaxPrice,
+    itemList.sort((a, b) => {
+      if (a.tier === b.tier) {
+        return b.value - a.value;
+      }
+
+      return b.tier - a.tier;
     });
 
-    itemList.push({
-      ...baseItem,
-      referenceId: `${key}.superior`,
-      grade: "superior",
-      value: roundNumber(baseItem.value * gradeValueMultipliers.superior),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers.superior),
-      minPrice: superiorMinPrice,
-      maxPrice: superiorMaxPrice,
+    await localforage.setItem(
+      `market.items.${language}`,
+      lzString.compress(JSON.stringify(itemList)),
+    );
+    await localforage.setItem(
+      "market.items.version",
+      env.NEXT_PUBLIC_MARKET_VERSION,
+    );
+
+    toast.success("Successfully loaded market items", {
+      id: toastId,
     });
 
-    itemList.push({
-      ...baseItem,
-      referenceId: `${key}.flawless`,
-      grade: "flawless",
-      value: roundNumber(baseItem.value * gradeValueMultipliers.flawless),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers.flawless),
-      minPrice: flawlessMinPrice,
-      maxPrice: flawlessMaxPrice,
+    return itemList;
+  } catch {
+    await localforage.removeItem(`market.items.${language}`);
+    await localforage.removeItem("market.items.version");
+
+    toast.error("Failed to load market items", {
+      id: toastId,
+      description: "Please try again later.",
     });
 
-    itemList.push({
-      ...baseItem,
-      referenceId: `${key}.epic`,
-      grade: "epic",
-      value: roundNumber(baseItem.value * gradeValueMultipliers.epic),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers.epic),
-      minPrice: epicMinPrice,
-      maxPrice: epicMaxPrice,
-    });
-
-    itemList.push({
-      ...baseItem,
-      referenceId: `${key}.legendary`,
-      grade: "legendary",
-      value: roundNumber(baseItem.value * gradeValueMultipliers.legendary),
-      xp: roundNumber(baseItem.xp * gradeValueMultipliers.legendary),
-      minPrice: legendaryMinPrice,
-      maxPrice: legendaryMaxPrice,
-    });
+    return [];
   }
-
-  itemList.sort((a, b) => {
-    if (a.tier === b.tier) {
-      return b.value - a.value;
-    }
-
-    return b.tier - a.tier;
-  });
-
-  await localforage.setItem(
-    `market.items.${language}`,
-    lzString.compress(JSON.stringify(itemList)),
-  );
-
-  return itemList;
 }

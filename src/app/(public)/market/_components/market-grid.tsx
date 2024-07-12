@@ -947,7 +947,7 @@ function ActiveFilters({
                   key={sort}
                 >
                   <XCircleIcon className="h-4 w-4" />
-                  {capitalise(column)}:{" "}
+                  {capitalise(column!)}:{" "}
                   {direction === "asc" ? "Ascending" : "Descending"}
                 </Badge>
               );

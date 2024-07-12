@@ -22,6 +22,7 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_ST_CLIENT_ID: z.string(),
+    NEXT_PUBLIC_MARKET_VERSION: z.string(),
   },
 
   /**
@@ -35,6 +36,7 @@ export const env = createEnv({
     FLAGS_SECRET: process.env.FLAGS_SECRET,
 
     NEXT_PUBLIC_ST_CLIENT_ID: process.env.NEXT_PUBLIC_ST_CLIENT_ID,
+    NEXT_PUBLIC_MARKET_VERSION: process.env.NEXT_PUBLIC_MARKET_VERSION,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
