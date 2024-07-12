@@ -5,6 +5,14 @@ export const gradeValueMultipliers = {
   legendary: 5,
 };
 
+export const itemGrades = {
+  normal: "Normal",
+  superior: "Superior",
+  flawless: "Flawless",
+  epic: "Epic",
+  legendary: "Legendary",
+};
+
 export const gradeComparisons = {
   normal: null,
   superior: "normal",

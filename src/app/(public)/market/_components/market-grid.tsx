@@ -6,11 +6,16 @@ import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
 } from "@radix-ui/react-icons";
-import { type ColumnDef, type Table } from "@tanstack/react-table";
+import {
+  SortingState,
+  type ColumnDef,
+  type Table,
+} from "@tanstack/react-table";
 import {
   EllipsisVerticalIcon,
   ExternalLinkIcon,
   FilterIcon,
+  XCircleIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,7 +28,11 @@ import {
   MarketItemsContext,
   type MarketItemsContextType,
 } from "~/components/context/market-items-context";
-import { MarketPricesContext } from "~/components/context/market-prices-context";
+import {
+  MarketPricesContext,
+  type MarketPricesContextType,
+} from "~/components/context/market-prices-context";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Drawer, DrawerContent, DrawerTrigger } from "~/components/ui/drawer";
@@ -38,6 +47,7 @@ import { Label } from "~/components/ui/label";
 import {
   MultiSelect,
   MultiSelectContent,
+  MultiSelectGroup,
   MultiSelectItem,
   MultiSelectList,
   MultiSelectSearch,
@@ -50,20 +60,16 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
+import { Skeleton } from "~/components/ui/skeleton";
 import useDataTable from "~/hooks/use-data-table";
 import useParsedSearchParams from "~/hooks/use-parsed-search-params";
-import { capitalise, formatNumber } from "~/lib/formatter";
+import { capitalise, formatArray, formatNumber } from "~/lib/formatter";
 import { cn, createQueryString, wrapArray } from "~/lib/utils";
-import { blueprintTypes, gradeComparisons } from "~/shop-titans/data/enums";
-import { type MarketPricesContextType } from "~/components/context/market-prices-context";
-import { Skeleton } from "~/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+  blueprintTypes,
+  gradeComparisons,
+  itemGrades,
+} from "~/shop-titans/data/enums";
 
 type Record = MarketItemsContextType["items"][0];
 
@@ -71,6 +77,8 @@ const searchParamsSchema = z.object({
   search: z.string().optional().default("").catch(""),
   tiers: z.array(z.string()).or(z.string()).optional().default([]).catch([]),
   types: z.array(z.string()).or(z.string()).optional().default([]).catch([]),
+  sort: z.string().or(z.array(z.string())).optional().default([]).catch([]),
+  grades: z.array(z.string()).or(z.string()).optional().default([]).catch([]),
 });
 
 export default function MarketGrid() {
@@ -100,13 +108,24 @@ export default function MarketGrid() {
         value,
         label,
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [blueprintTypes],
+    [],
+  );
+
+  const gradeFilterOptions = React.useMemo(
+    () =>
+      Object.entries(itemGrades).map(([value, label]) => ({ label, value })),
+    [],
   );
 
   const [search, setSearch] = React.useState(parsedSearchParams.search);
   const [tiers, setTiers] = React.useState(wrapArray(parsedSearchParams.tiers));
   const [types, setTypes] = React.useState(wrapArray(parsedSearchParams.types));
+  const [sorting, setSorting] = React.useState<string[]>(
+    wrapArray(parsedSearchParams.sort),
+  );
+  const [grades, setGrades] = React.useState<string[]>(
+    wrapArray(parsedSearchParams.grades),
+  );
 
   const columns = React.useMemo(
     () =>
@@ -136,6 +155,10 @@ export default function MarketGrid() {
           id: "type",
           value: types,
         },
+        {
+          id: "grade",
+          value: grades,
+        },
       ],
     },
   });
@@ -149,22 +172,83 @@ export default function MarketGrid() {
       shopArbitrage: table.getColumn("shopArbitrage")!,
       xp: table.getColumn("xp")!,
       craftXp: table.getColumn("craftXp")!,
+      grade: table.getColumn("grade")!,
     };
   }, [table]);
 
+  const [mounted, setMounted] = React.useState(false);
+
   React.useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     filterableColumns.name.setFilterValue(search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, search]);
 
   React.useEffect(() => {
+    if (!mounted) {
+      return;
+    }
     filterableColumns.tier.setFilterValue(tiers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, tiers]);
 
   React.useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     filterableColumns.type.setFilterValue(types);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, types]);
 
-  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    filterableColumns.type.setFilterValue(types);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterableColumns, types]);
+
+  React.useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    filterableColumns.grade.setFilterValue(grades);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterableColumns, grades]);
+
+  React.useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    const sortedColumns: SortingState = [];
+    for (const sort of sorting) {
+      const [columnName, direction] = sort.split(".");
+      if (
+        !columnName ||
+        !direction ||
+        sortedColumns.some((val) => val.id === columnName)
+      ) {
+        continue;
+      }
+
+      sortedColumns.push({
+        id: columnName,
+        desc: direction === "desc",
+      });
+    }
+
+    console.log([sorting, sortedColumns]);
+
+    table.setSorting(sortedColumns);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sorting]);
 
   React.useEffect(() => {
     if (!mounted) {
@@ -178,6 +262,7 @@ export default function MarketGrid() {
           search,
           tiers,
           types,
+          grades,
         },
         searchParams,
       )}`,
@@ -191,7 +276,7 @@ export default function MarketGrid() {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tiers, types]);
+  }, [search, tiers, types, grades]);
 
   if (
     marketItemsContext?.isLoadingItems ??
@@ -224,6 +309,11 @@ export default function MarketGrid() {
         typeFilterOptions={typeFilterOptions}
         types={types}
         setTypes={setTypes}
+        sorting={sorting}
+        setSorting={setSorting}
+        gradeFilterOptions={gradeFilterOptions}
+        grades={grades}
+        setGrades={setGrades}
       />
 
       <MarketItemGrid
@@ -310,10 +400,50 @@ function getTableColumns(
       },
     },
     {
+      id: "fusionArbitrage",
+      sortUndefined: "last",
+      accessorFn: (row) => {
+        const item = prices.get(row.referenceId);
+        if (!item) {
+          return undefined;
+        }
+
+        const gradeComparison = gradeComparisons[
+          row.grade
+        ] as keyof typeof gradeComparisons;
+
+        if (!gradeComparison) {
+          return undefined;
+        }
+
+        const comparisonPrices = prices.get(`${row.uid}.${gradeComparison}`);
+
+        if ((!item?.request && !item?.offer) || !comparisonPrices?.offer) {
+          return null;
+        }
+
+        // Needs 5 items to fuse into a higher tier
+        if (comparisonPrices.offer.gemsQty < 5) {
+          return null;
+        }
+
+        const comparisonOfferPrice =
+          (comparisonPrices.offer.gemsPrice ?? 0) * 5;
+
+        return (
+          (item?.request?.gemsPrice ?? item?.offer?.gemsPrice ?? 0) -
+          comparisonOfferPrice
+        );
+      },
+    },
+    {
       accessorKey: "xp",
     },
     {
       accessorKey: "craftXp",
+    },
+    {
+      accessorKey: "grade",
     },
   ];
 }
@@ -328,6 +458,11 @@ function MarketFilters({
   typeFilterOptions,
   types,
   setTypes,
+  sorting,
+  setSorting,
+  gradeFilterOptions,
+  grades,
+  setGrades,
 }: {
   table: Table<Record>;
   search: string;
@@ -338,34 +473,59 @@ function MarketFilters({
   typeFilterOptions: { value: string; label: string }[];
   types: string[];
   setTypes: (value: string[]) => void;
+  sorting: string[];
+  setSorting: (value: string[]) => void;
+  gradeFilterOptions: { value: string; label: string }[];
+  grades: string[];
+  setGrades: (value: string[]) => void;
 }) {
   return (
-    <Card>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <Input
-            placeholder="Filter by names..."
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-            }}
-            className="sm:max-w-sm"
-          />
-        </div>
+    <>
+      <Card>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Input
+              placeholder="Filter by names..."
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+              }}
+              className="sm:max-w-sm"
+            />
+          </div>
 
-        <div className="flex items-center justify-end">
-          <MarketFiltersTrigger
-            table={table}
-            tierFilterOptions={tierFilterOptions}
+          <div className="flex items-center justify-end">
+            <MarketFiltersTrigger
+              table={table}
+              tierFilterOptions={tierFilterOptions}
+              tiers={tiers}
+              setTiers={setTiers}
+              typeFilterOptions={typeFilterOptions}
+              types={types}
+              setTypes={setTypes}
+              sorting={sorting}
+              setSorting={setSorting}
+              gradeFilterOptions={gradeFilterOptions}
+              grades={grades}
+              setGrades={setGrades}
+            />
+          </div>
+
+          <ActiveFilters
+            search={search}
+            setSearch={setSearch}
             tiers={tiers}
             setTiers={setTiers}
-            typeFilterOptions={typeFilterOptions}
             types={types}
             setTypes={setTypes}
+            sorting={sorting}
+            setSorting={setSorting}
+            grades={grades}
+            setGrades={setGrades}
           />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
@@ -377,6 +537,11 @@ function MarketFiltersTrigger({
   typeFilterOptions,
   types,
   setTypes,
+  sorting,
+  setSorting,
+  gradeFilterOptions,
+  grades,
+  setGrades,
 }: {
   table: Table<Record>;
   tierFilterOptions: { value: string; label: string }[];
@@ -385,6 +550,11 @@ function MarketFiltersTrigger({
   typeFilterOptions: { value: string; label: string }[];
   types: string[];
   setTypes: (value: string[]) => void;
+  sorting: string[];
+  setSorting: (value: string[]) => void;
+  gradeFilterOptions: { value: string; label: string }[];
+  grades: string[];
+  setGrades: (value: string[]) => void;
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -409,6 +579,11 @@ function MarketFiltersTrigger({
             typeFilterOptions={typeFilterOptions}
             types={types}
             setTypes={setTypes}
+            sorting={sorting}
+            setSorting={setSorting}
+            gradeFilterOptions={gradeFilterOptions}
+            grades={grades}
+            setGrades={setGrades}
           />
         </PopoverContent>
       </Popover>
@@ -433,6 +608,11 @@ function MarketFiltersTrigger({
           typeFilterOptions={typeFilterOptions}
           types={types}
           setTypes={setTypes}
+          sorting={sorting}
+          setSorting={setSorting}
+          gradeFilterOptions={gradeFilterOptions}
+          grades={grades}
+          setGrades={setGrades}
         />
       </DrawerContent>
     </Drawer>
@@ -440,7 +620,6 @@ function MarketFiltersTrigger({
 }
 
 function MarketFiltersForm({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   table,
   tierFilterOptions,
   tiers,
@@ -448,6 +627,11 @@ function MarketFiltersForm({
   typeFilterOptions,
   types,
   setTypes,
+  sorting,
+  setSorting,
+  gradeFilterOptions,
+  grades,
+  setGrades,
 }: {
   table: Table<Record>;
   tierFilterOptions: { value: string; label: string }[];
@@ -456,45 +640,19 @@ function MarketFiltersForm({
   typeFilterOptions: { value: string; label: string }[];
   types: string[];
   setTypes: (value: string[]) => void;
+  sorting: string[];
+  setSorting: (value: string[]) => void;
+  gradeFilterOptions: { value: string; label: string }[];
+  grades: string[];
+  setGrades: (value: string[]) => void;
 }) {
-  const [sorting, setSorting] = React.useState<string[]>(() =>
-    table
-      .getState()
-      .sorting.map((sort) => `${sort.id}.${sort.desc ? "desc" : "asc"}`),
-  );
-
-  const onSortChange = React.useCallback(
-    (values: string[]) => {
-      if (!values.length) {
-        table.resetSorting();
-        setSorting([]);
-        return;
-      }
-
-      const sortedColumns: string[] = [];
-      for (const value of values) {
-        const [columnName, direction] = value.split(".");
-        if (sortedColumns.includes(columnName!)) {
-          continue;
-        }
-
-        const column = table.getColumn(columnName!);
-        column?.toggleSorting(direction === "desc", true);
-
-        sortedColumns.push(value);
-      }
-
-      setSorting(sortedColumns);
-    },
-    [table],
-  );
   return (
     <div className="space-y-4">
       <div>
         <Label className="space-y-2">
           <span>Sort</span>
 
-          <MultiSelect value={sorting} onValueChange={onSortChange}>
+          <MultiSelect value={sorting} onValueChange={setSorting}>
             <MultiSelectTrigger>
               <MultiSelectValue placeholder="Sort items..." />
             </MultiSelectTrigger>
@@ -503,31 +661,95 @@ function MarketFiltersForm({
               <MultiSelectSearch />
 
               <MultiSelectList>
-                <MultiSelectItem value="name.asc">
-                  Name: Ascending
-                </MultiSelectItem>
-                <MultiSelectItem value="name.desc">
-                  Name: Descending
-                </MultiSelectItem>
+                <MultiSelectGroup heading="Name">
+                  <MultiSelectItem label="Name: ASC" value="name.asc">
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem label="Name: DESC" value="name.desc">
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
 
-                <MultiSelectItem value="value.asc">
-                  Value: Ascending
-                </MultiSelectItem>
-                <MultiSelectItem value="value.desc">
-                  Value: Descending
-                </MultiSelectItem>
+                <MultiSelectGroup heading="Value">
+                  <MultiSelectItem label="Value: ASC" value="value.asc">
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem label="Value: DESC" value="value.desc">
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
 
-                <MultiSelectItem value="xp.asc">XP: Ascending</MultiSelectItem>
-                <MultiSelectItem value="xp.desc">
-                  XP: Descending
-                </MultiSelectItem>
+                <MultiSelectGroup heading="Tier">
+                  <MultiSelectItem label="Tier: ASC" value="tier.asc">
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem label="Tier: DESC" value="tier.desc">
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
 
-                <MultiSelectItem value="craftXp.asc">
-                  Worker XP: Ascending
-                </MultiSelectItem>
-                <MultiSelectItem value="craftXp.desc">
-                  Worker XP: Descending
-                </MultiSelectItem>
+                <MultiSelectGroup heading="Shop Arbitrage">
+                  <MultiSelectItem
+                    label="Shop Arbitrage: ASC"
+                    value="shopArbitrage.asc"
+                  >
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem
+                    label="Shop Arbitrage: DESC"
+                    value="shopArbitrage.desc"
+                  >
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
+
+                <MultiSelectGroup heading="Market Arbitrage">
+                  <MultiSelectItem
+                    label="Market Arbitrage: ASC"
+                    value="marketArbitrage.asc"
+                  >
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem
+                    label="Market Arbitrage: DESC"
+                    value="marketArbitrage.desc"
+                  >
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
+
+                <MultiSelectGroup heading="Fusion Arbitrage">
+                  <MultiSelectItem
+                    label="Fusion Arbitrage: ASC"
+                    value="fusionArbitrage.asc"
+                  >
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem
+                    label="Fusion Arbitrage: DESC"
+                    value="fusionArbitrage.desc"
+                  >
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
+
+                <MultiSelectGroup heading="Merchant XP">
+                  <MultiSelectItem label="Merchant XP: ASC" value="xp.asc">
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem label="Merchant XP: DESC" value="xp.desc">
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
+
+                <MultiSelectGroup heading="Worker XP">
+                  <MultiSelectItem label="Worker XP: ASC" value="craftXp.asc">
+                    Ascending
+                  </MultiSelectItem>
+                  <MultiSelectItem label="Worker XP: DESC" value="craftXp.desc">
+                    Descending
+                  </MultiSelectItem>
+                </MultiSelectGroup>
               </MultiSelectList>
             </MultiSelectContent>
           </MultiSelect>
@@ -590,6 +812,147 @@ function MarketFiltersForm({
             </MultiSelectContent>
           </MultiSelect>
         </Label>
+      </div>
+
+      <div>
+        <Label className="space-y-2">
+          <span>Quality</span>
+
+          <MultiSelect
+            value={grades}
+            onValueChange={(value) => {
+              setGrades(value);
+            }}
+          >
+            <MultiSelectTrigger>
+              <MultiSelectValue placeholder="Select qualities" />
+            </MultiSelectTrigger>
+
+            <MultiSelectContent>
+              <MultiSelectSearch />
+
+              <MultiSelectList>
+                {gradeFilterOptions.map((option) => (
+                  <MultiSelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MultiSelectItem>
+                ))}
+              </MultiSelectList>
+            </MultiSelectContent>
+          </MultiSelect>
+        </Label>
+      </div>
+    </div>
+  );
+}
+
+function ActiveFilters({
+  search,
+  setSearch,
+  tiers,
+  setTiers,
+  types,
+  setTypes,
+  sorting,
+  setSorting,
+  grades,
+  setGrades,
+}: {
+  search: string;
+  setSearch: (value: string) => void;
+  tiers: string[];
+  setTiers: (value: string[]) => void;
+  types: string[];
+  setTypes: (value: string[]) => void;
+  sorting: string[];
+  setSorting: (value: string[]) => void;
+  grades: string[];
+  setGrades: (value: string[]) => void;
+}) {
+  const isFilteringByName = React.useMemo(
+    () => Boolean(search.length),
+    [search],
+  );
+  const isFilteringByTier = React.useMemo(() => Boolean(tiers.length), [tiers]);
+  const isFilteringByType = React.useMemo(() => Boolean(types.length), [types]);
+  const isFilteringByQuality = React.useMemo(
+    () => Boolean(grades.length),
+    [grades],
+  );
+  const isSorting = React.useMemo(() => Boolean(sorting.length), [sorting]);
+
+  if (
+    !isFilteringByName &&
+    !isFilteringByTier &&
+    !isFilteringByType &&
+    !isFilteringByQuality &&
+    !isSorting
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="sm:col-span-2">
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Active filters:</p>
+
+        <div className="flex items-center gap-2">
+          {isFilteringByName && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setSearch("")}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              Search: {search}
+            </Badge>
+          )}
+          {isFilteringByTier && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setTiers([])}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              Tiers: {formatArray(tiers)}
+            </Badge>
+          )}
+          {isFilteringByType && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setTypes([])}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              Types: {formatArray(types)}
+            </Badge>
+          )}
+          {isFilteringByQuality && (
+            <Badge
+              className="flex cursor-pointer items-center gap-1"
+              onClick={() => setGrades([])}
+            >
+              <XCircleIcon className="h-4 w-4" />
+              Qualities: {formatArray(grades)}
+            </Badge>
+          )}
+
+          {isSorting &&
+            sorting.map((sort) => {
+              const [column, direction] = sort.split(".");
+
+              return (
+                <Badge
+                  className="flex cursor-pointer items-center gap-1"
+                  onClick={() =>
+                    setSorting(sorting.filter((val) => val !== sort))
+                  }
+                  key={sort}
+                >
+                  <XCircleIcon className="h-4 w-4" />
+                  {capitalise(column)}:{" "}
+                  {direction === "asc" ? "Ascending" : "Descending"}
+                </Badge>
+              );
+            })}
+        </div>
       </div>
     </div>
   );
