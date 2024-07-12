@@ -41,3 +41,7 @@ export function createQueryString(
 export function wrapArray<T>(value: T | T[]) {
   return Array.isArray(value) ? value : [value];
 }
+
+export function getItemIcon(id: string) {
+  return `https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/items/${id}.webp`;
+}

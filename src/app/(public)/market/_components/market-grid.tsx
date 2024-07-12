@@ -19,6 +19,11 @@ import * as React from "react";
 import TimeAgo from "react-timeago";
 import { useMediaQuery } from "usehooks-ts";
 import { z } from "zod";
+import {
+  MarketItemsContext,
+  type MarketItemsContextType,
+} from "~/components/context/market-items-context";
+import { MarketPricesContext } from "~/components/context/market-prices-context";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Drawer, DrawerContent, DrawerTrigger } from "~/components/ui/drawer";
@@ -50,14 +55,10 @@ import useParsedSearchParams from "~/hooks/use-parsed-search-params";
 import { capitalise, formatNumber } from "~/lib/formatter";
 import { cn, createQueryString, wrapArray } from "~/lib/utils";
 import { blueprintTypes, gradeComparisons } from "~/shop-titans/data/enums";
-import { type MarketPrice } from "~/shop-titans/types";
-import {
-  MarketContext,
-  type MarketContextType,
-  type ReferenceId,
-} from "./market-context";
+import { type MarketPricesContextType } from "~/components/context/market-prices-context";
+import { Skeleton } from "~/components/ui/skeleton";
 
-type Record = MarketContextType["items"][0];
+type Record = MarketItemsContextType["items"][0];
 
 const searchParamsSchema = z.object({
   search: z.string().optional().default("").catch(""),
@@ -74,7 +75,8 @@ export default function MarketGrid() {
     searchParamsSchema,
   );
 
-  const marketContext = React.useContext(MarketContext);
+  const marketItemsContext = React.useContext(MarketItemsContext);
+  const marketPricesContext = React.useContext(MarketPricesContext);
 
   const tierFilterOptions = React.useMemo(
     () =>
@@ -102,20 +104,14 @@ export default function MarketGrid() {
   const columns = React.useMemo(
     () =>
       getTableColumns(
-        marketContext?.marketData.prices ??
-          new Map<
-            ReferenceId,
-            {
-              offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-              request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-            }
-          >(),
+        marketPricesContext?.prices ??
+          (new Map() as MarketPricesContextType["prices"]),
       ),
-    [marketContext],
+    [marketPricesContext],
   );
 
   const { table } = useDataTable({
-    data: marketContext?.items ?? [],
+    data: marketItemsContext?.items ?? [],
     columns,
     defaultPerPage: 12,
     disablePerPage: true,
@@ -188,6 +184,25 @@ export default function MarketGrid() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, tiers, types]);
 
+  if (
+    marketItemsContext?.isLoadingItems ??
+    marketPricesContext?.isLoadingPrices
+  ) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-[74px]" />
+
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 12 }).map((_, index) => (
+            <Skeleton key={index} className="h-[307px]" />
+          ))}
+        </div>
+
+        <Skeleton className="h-16" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <MarketFilters
@@ -204,8 +219,7 @@ export default function MarketGrid() {
 
       <MarketItemGrid
         table={table}
-        marketDataPrices={marketContext?.marketData.prices ?? new Map()}
-        lastUpdated={marketContext?.marketData.lastUpdatedAt ?? new Date()}
+        marketDataPrices={marketPricesContext?.prices ?? new Map()}
       />
 
       <Card>
@@ -218,7 +232,7 @@ export default function MarketGrid() {
 }
 
 function getTableColumns(
-  prices: MarketContextType["marketData"]["prices"],
+  prices: MarketPricesContextType["prices"],
 ): ColumnDef<Record>[] {
   return [
     {
@@ -497,19 +511,12 @@ function MarketFiltersForm({
   );
 }
 
-const LastUpdatedAt = React.memo(({ date }: { date: Date }) => (
-  <TimeAgo date={date} />
-));
-LastUpdatedAt.displayName = "LastUpdatedAt";
-
 function MarketItemGrid({
   table,
   marketDataPrices,
-  lastUpdated,
 }: {
   table: Table<Record>;
-  marketDataPrices: MarketContextType["marketData"]["prices"];
-  lastUpdated: Date;
+  marketDataPrices: MarketPricesContextType["prices"];
 }) {
   const rows = table.getRowModel().rows;
 
@@ -522,7 +529,6 @@ function MarketItemGrid({
               key={row.id}
               item={row.original}
               marketDataPrices={marketDataPrices}
-              LastUpdatedAt={<LastUpdatedAt date={lastUpdated} />}
             />
           );
         })
@@ -538,11 +544,9 @@ function MarketItemGrid({
 function MarketGridItem({
   item,
   marketDataPrices,
-  LastUpdatedAt,
 }: {
   item: Record;
-  marketDataPrices: MarketContextType["marketData"]["prices"];
-  LastUpdatedAt: React.ReactNode;
+  marketDataPrices: MarketPricesContextType["prices"];
 }) {
   const prices = React.useMemo(
     () => marketDataPrices.get(item.referenceId),
@@ -601,6 +605,24 @@ function MarketGridItem({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comparisonPrices]);
+
+  const updatedAt = React.useMemo(() => {
+    if (!prices?.offer?.updatedAt && !prices?.request?.updatedAt) {
+      return new Date();
+    }
+
+    if (!prices?.offer?.updatedAt && prices?.request?.updatedAt) {
+      return prices.request.updatedAt;
+    }
+
+    if (prices?.offer?.updatedAt && !prices?.request?.updatedAt) {
+      return prices.offer.updatedAt;
+    }
+
+    return prices.offer!.updatedAt > prices.request!.updatedAt
+      ? prices.offer!.updatedAt
+      : prices.request!.updatedAt;
+  }, [prices]);
 
   return (
     <Card className="relative">
@@ -699,7 +721,7 @@ function MarketGridItem({
           <div>
             <h3 className="text-sm font-bold">Market Information</h3>
             <p className="text-xs font-medium text-muted-foreground">
-              Updated {LastUpdatedAt}
+              Updated <TimeAgo date={updatedAt} />
             </p>
           </div>
 

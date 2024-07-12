@@ -1,17 +1,16 @@
 "use client";
 
-import { useQueries } from "@tanstack/react-query";
+import { type Item } from "~/shop-titans/types";
+import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import localforage from "localforage";
 import lzString from "lz-string";
-import * as React from "react";
-import { Skeleton } from "~/components/ui/skeleton";
-import { roundNumber } from "~/lib/formatter";
 import {
   blueprintCategories,
   blueprintTypes,
   gradeValueMultipliers,
 } from "~/shop-titans/data/enums";
-import { type Item, type MarketPrice } from "~/shop-titans/types";
+import { roundNumber } from "~/lib/formatter";
 
 export type ReferenceId = `${string}.${
   | "normal"
@@ -20,40 +19,27 @@ export type ReferenceId = `${string}.${
   | "epic"
   | "legendary"}`;
 
-export type MarketContextType = {
-  items: (Omit<Item, "tradeMinMaxValue"> & {
-    referenceId: ReferenceId;
-    grade: "normal" | "superior" | "flawless" | "epic" | "legendary";
-    typeName: string;
-    category: string;
-    name: string;
-    description: string;
-    minPrice?: number;
-    maxPrice?: number;
-  })[];
-  marketData: {
-    prices: Map<
-      ReferenceId,
-      {
-        offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-        request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-      }
-    >;
-    lastUpdatedAt: Date | undefined;
-  };
+type MarketItem = Omit<Item, "tradeMinMaxValue"> & {
+  referenceId: ReferenceId;
+  grade: "normal" | "superior" | "flawless" | "epic" | "legendary";
+  typeName: string;
+  category: string;
+  name: string;
+  description: string;
+  minPrice?: number;
+  maxPrice?: number;
 };
 
-export const MarketContext = React.createContext<MarketContextType | null>(
-  null,
-);
+export type MarketItemsContextType = {
+  items: MarketItem[];
+  itemLookup: Record<ReferenceId, number>;
+  isLoadingItems: boolean;
+};
 
-export function MarketProvider({
-  children,
-  debug,
-}: {
-  children: React.ReactNode;
-  debug: boolean;
-}) {
+export const MarketItemsContext =
+  React.createContext<MarketItemsContextType | null>(null);
+
+export function MarketItemsProvider(props: React.HTMLAttributes<HTMLElement>) {
   const [language, setLanguage] = React.useState("en");
 
   React.useEffect(() => {
@@ -62,66 +48,39 @@ export function MarketProvider({
     }
   }, []);
 
-  const [itemsQuery, pricesQuery] = useQueries({
-    queries: [
-      {
-        queryKey: ["market.items", language],
-        queryFn: async () => await fetchMarketItems(language),
-      },
-      {
-        queryKey: ["market.data", debug],
-        queryFn: async () => await fetchMarketPrices(debug),
-        refetchInterval: 30000,
-      },
-    ],
+  const { data, isLoading } = useQuery({
+    queryKey: ["market.items", language],
+    queryFn: async () => await fetchMarketItems(language),
   });
 
+  const itemLookup = React.useMemo(() => {
+    const lookup: Record<ReferenceId, number> = {};
+    if (!data) {
+      return lookup;
+    }
+
+    for (let i = 0; i < data.length ?? 0; i++) {
+      lookup[data[i]!.referenceId] = i;
+    }
+
+    return lookup;
+  }, [data]);
+
   return (
-    <MarketContext.Provider
-      value={{
-        items: itemsQuery.data ?? [],
-        marketData: {
-          prices:
-            pricesQuery.data?.prices ??
-            new Map<
-              ReferenceId,
-              {
-                offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-                request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-              }
-            >(),
-          lastUpdatedAt: pricesQuery.data?.lastUpdatedAt ?? undefined,
-        },
-      }}
-    >
-      {(itemsQuery.isLoading || pricesQuery.isLoading) && (
-        <div className="space-y-4">
-          <Skeleton className="h-[74px]" />
-
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 12 }).map((_, index) => (
-              <Skeleton key={index} className="h-[307px]" />
-            ))}
-          </div>
-
-          <Skeleton className="h-16" />
-        </div>
-      )}
-
-      {!itemsQuery.isLoading && !pricesQuery.isLoading && children}
-    </MarketContext.Provider>
+    <MarketItemsContext.Provider
+      {...props}
+      value={{ items: data ?? [], itemLookup, isLoadingItems: isLoading }}
+    />
   );
 }
 
-async function fetchMarketItems(
-  language: string,
-): Promise<MarketContextType["items"]> {
-  const cachedItems = await localforage.getItem("market-items");
+async function fetchMarketItems(language: string): Promise<MarketItem[]> {
+  const cachedItems = await localforage.getItem(`market.items.${language}`);
 
   if (cachedItems) {
     return JSON.parse(
       lzString.decompress(cachedItems as string),
-    ) as MarketContextType["items"];
+    ) as MarketItem[];
   }
 
   const translationsResponse = await fetch(
@@ -141,7 +100,7 @@ async function fetchMarketItems(
 
   const items = (await itemsResponse.json()) as Record<string, Item>;
 
-  const itemList: MarketContextType["items"] = [];
+  const itemList: MarketItem[] = [];
 
   for (const key in items) {
     const item = items[key]!;
@@ -175,7 +134,7 @@ async function fetchMarketItems(
       subtype: item.subtype,
       xp: item.xp,
       craftXp: item.craftXp,
-      value: roundNumber(item.value * 1.25),
+      value: item.value,
       favor: item.favor,
       time: item.time,
       atk: item.atk,
@@ -315,118 +274,9 @@ async function fetchMarketItems(
   });
 
   await localforage.setItem(
-    "market-items",
+    `market.items.${language}`,
     lzString.compress(JSON.stringify(itemList)),
   );
 
   return itemList;
-}
-
-async function fetchMarketPrices(debug: boolean) {
-  if (debug) {
-    const cachedPrices = await localforage.getItem("market-prices");
-
-    if (cachedPrices) {
-      return {
-        prices: new Map<
-          ReferenceId,
-          {
-            offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-            request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-          }
-        >(
-          JSON.parse(
-            lzString.decompress(cachedPrices as string),
-          ) as MarketContextType["marketData"]["prices"],
-        ),
-        lastUpdatedAt: new Date(),
-      };
-    }
-  }
-
-  const response = await fetch("/api/smartytitans/api/item/last/all", {
-    cache: "no-store",
-  });
-
-  const data = ((await response.json()) as { data: MarketPrice[] | null }).data;
-  if (!data) {
-    return null;
-  }
-
-  const itemMap = new Map<
-    ReferenceId,
-    {
-      offer?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-      request?: Omit<MarketPrice, "updatedAt"> & { updatedAt: Date };
-    }
-  >();
-
-  for (const item of data) {
-    const referenceId = `${item.uid}.${item.tag1 ?? "normal"}` as ReferenceId;
-    const updatedAt = new Date(item.updatedAt);
-
-    const prices = itemMap.get(referenceId);
-    if (!prices) {
-      switch (item.tType) {
-        case "o":
-          itemMap.set(referenceId, {
-            offer: {
-              ...item,
-              goldQty: item.goldQty ?? 0,
-              gemsQty: item.gemsQty ?? 0,
-              updatedAt,
-            },
-          });
-          break;
-        case "r":
-          itemMap.set(referenceId, {
-            request: {
-              ...item,
-              goldQty: item.goldQty ?? 0,
-              gemsQty: item.gemsQty ?? 0,
-              updatedAt,
-            },
-          });
-          break;
-      }
-      continue;
-    }
-
-    switch (item.tType) {
-      case "o":
-        if (!prices.offer || updatedAt >= prices.offer.updatedAt) {
-          prices.offer = {
-            ...item,
-            goldQty: item.goldQty ?? 0,
-            gemsQty: item.gemsQty ?? 0,
-            updatedAt,
-          };
-        }
-        break;
-      case "r":
-        if (!prices.request || updatedAt >= prices.request.updatedAt) {
-          prices.request = {
-            ...item,
-            goldQty: item.goldQty ?? 0,
-            gemsQty: item.gemsQty ?? 0,
-            updatedAt,
-          };
-        }
-        break;
-    }
-  }
-
-  const lastUpdatedAt = new Date();
-
-  if (debug) {
-    await localforage.setItem(
-      "market-prices",
-      lzString.compress(JSON.stringify(Array.from(itemMap.entries()))),
-    );
-  }
-
-  return {
-    prices: itemMap,
-    lastUpdatedAt: lastUpdatedAt,
-  };
 }

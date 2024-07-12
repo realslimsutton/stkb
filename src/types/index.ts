@@ -919,8 +919,9 @@ export type Adventurer = {
     id: number;
     uid: string;
     sid: number;
-    tag1?: string;
-    tag2?: string;
+    tag1?: string | null;
+    tag2?: string | null;
+    tag3?: string | null;
   }[];
   transmogs: unknown;
 };

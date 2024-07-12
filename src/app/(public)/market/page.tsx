@@ -1,6 +1,7 @@
+import { MarketItemsProvider } from "~/components/context/market-items-context";
+import { MarketPricesProvider } from "~/components/context/market-prices-context";
 import { env } from "~/env";
 import PageHeader from "../_components/page-header";
-import { MarketProvider } from "./_components/market-context";
 import MarketGrid from "./_components/market-grid";
 
 export const metadata = {
@@ -15,9 +16,11 @@ export default async function MarketPage() {
       <PageHeader>Market</PageHeader>
 
       <div className="container mx-auto">
-        <MarketProvider debug={isDev}>
-          <MarketGrid />
-        </MarketProvider>
+        <MarketItemsProvider>
+          <MarketPricesProvider debug={isDev}>
+            <MarketGrid />
+          </MarketPricesProvider>
+        </MarketItemsProvider>
       </div>
     </>
   );

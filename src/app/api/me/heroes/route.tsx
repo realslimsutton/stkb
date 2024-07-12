@@ -39,32 +39,5 @@ export async function GET() {
     return a.name.localeCompare(b.name);
   });
 
-  const itemIds = heroes.flatMap((hero) => hero.items).map((item) => item.uid);
-
-  const items = await db.query.blueprints.findMany({
-    where: and(inArray(blueprints.id, itemIds)),
-  });
-
-  return NextResponse.json(
-    heroes.map((hero) => {
-      return {
-        ...hero,
-        items: hero.items
-          .map((item) => {
-            const blueprint = items.find(
-              (blueprint) => blueprint.id === item.uid,
-            );
-            if (!blueprint) {
-              return null;
-            }
-
-            return {
-              ...blueprint,
-              tag1: item.tag1,
-            };
-          })
-          .filter((item) => item !== null),
-      };
-    }),
-  );
+  return NextResponse.json(heroes);
 }
