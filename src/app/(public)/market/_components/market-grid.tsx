@@ -444,6 +444,13 @@ function getTableColumns(
     },
     {
       accessorKey: "grade",
+      filterFn: (row, columnId, filterValue: string[]) => {
+        if (!filterValue || filterValue?.length === 0) {
+          return true;
+        }
+
+        return filterValue.includes(row.original.grade);
+      },
     },
   ];
 }
