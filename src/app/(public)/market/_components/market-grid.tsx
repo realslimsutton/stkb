@@ -176,51 +176,32 @@ export default function MarketGrid() {
     };
   }, [table]);
 
-  const [mounted, setMounted] = React.useState(false);
-
   React.useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
     filterableColumns.name.setFilterValue(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, search]);
 
   React.useEffect(() => {
-    if (!mounted) {
-      return;
-    }
     filterableColumns.tier.setFilterValue(tiers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, tiers]);
 
   React.useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
     filterableColumns.type.setFilterValue(types);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, types]);
 
   React.useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
     filterableColumns.type.setFilterValue(types);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, types]);
 
   React.useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
     filterableColumns.grade.setFilterValue(grades);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterableColumns, grades]);
+
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     if (!mounted) {
