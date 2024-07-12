@@ -7,8 +7,8 @@ import {
   DoubleArrowRightIcon,
 } from "@radix-ui/react-icons";
 import {
-  type SortingState,
   type ColumnDef,
+  type SortingState,
   type Table,
 } from "@tanstack/react-table";
 import {
@@ -95,9 +95,11 @@ const searchParamsSchema = z.object({
 const columns: ColumnDef<Record>[] = [
   {
     accessorKey: "name",
+    header: "Name",
   },
   {
     accessorKey: "type",
+    header: "Type",
     filterFn: (row, columnId, filterValue: string[]) => {
       if (!filterValue || filterValue?.length === 0) {
         return true;
@@ -118,27 +120,34 @@ const columns: ColumnDef<Record>[] = [
   },
   {
     accessorKey: "value",
+    header: "Value",
   },
   {
     accessorKey: "marketArbitrage",
+    header: "Market Arbitrage",
     sortUndefined: "last",
   },
   {
     accessorKey: "shopArbitrage",
+    header: "Shop Arbitrage",
     sortUndefined: "last",
   },
   {
     accessorKey: "fusionArbitrage",
+    header: "Fusion Arbitrage",
     sortUndefined: "last",
   },
   {
     accessorKey: "xp",
+    header: "Merchant XP",
   },
   {
     accessorKey: "craftXp",
+    header: "Worker XP",
   },
   {
     accessorKey: "grade",
+    header: "Grade",
     filterFn: (row, columnId, filterValue: string[]) => {
       if (!filterValue || filterValue?.length === 0) {
         return true;
@@ -323,6 +332,7 @@ export default function MarketGrid() {
   return (
     <div className="space-y-4">
       <MarketFilters
+        table={table}
         search={search}
         setSearch={setSearch}
         tierFilterOptions={tierFilterOptions}
@@ -380,6 +390,7 @@ function getItemsWithPrices(
 }
 
 function MarketFilters({
+  table,
   search,
   setSearch,
   tierFilterOptions,
@@ -394,6 +405,7 @@ function MarketFilters({
   grades,
   setGrades,
 }: {
+  table: Table<Record>;
   search: string;
   setSearch: (value: string) => void;
   tierFilterOptions: { value: string; label: string }[];
@@ -440,6 +452,7 @@ function MarketFilters({
           </div>
 
           <ActiveFilters
+            table={table}
             search={search}
             setSearch={setSearch}
             tiers={tiers}
@@ -769,6 +782,7 @@ function MarketFiltersForm({
 }
 
 function ActiveFilters({
+  table,
   search,
   setSearch,
   tiers,
@@ -780,6 +794,7 @@ function ActiveFilters({
   grades,
   setGrades,
 }: {
+  table: Table<Record>;
   search: string;
   setSearch: (value: string) => void;
   tiers: string[];
@@ -869,7 +884,7 @@ function ActiveFilters({
                   key={sort}
                 >
                   <XCircleIcon className="h-4 w-4" />
-                  {capitalise(column!)}:{" "}
+                  {table.getColumn(column!)!.columnDef.header as string}:{" "}
                   {direction === "asc" ? "Ascending" : "Descending"}
                 </Badge>
               );
