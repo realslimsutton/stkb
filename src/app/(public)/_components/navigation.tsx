@@ -54,8 +54,8 @@ export function DesktopNavigation({ user }: { user: User | null }) {
     [pathname],
   );
 
-  const isBlogPage = React.useMemo(
-    () => isRouteActive(pathname, "/blog"),
+  const isChangelogPage = React.useMemo(
+    () => isRouteActive(pathname, "/changelog"),
     [pathname],
   );
 
@@ -161,8 +161,8 @@ export function DesktopNavigation({ user }: { user: User | null }) {
               className={cn({
                 "bg-transparent hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent":
                   true,
-                "text-muted-foreground": !isBlogPage,
-                "text-accent-foreground": isBlogPage,
+                "text-muted-foreground": !isChangelogPage,
+                "text-accent-foreground": isChangelogPage,
               })}
             >
               Resources
@@ -171,12 +171,11 @@ export function DesktopNavigation({ user }: { user: User | null }) {
             <NavigationMenuContent>
               <ul className="grid w-[550px] grid-cols-2 p-2">
                 <DesktopListItem
-                  href="#"
-                  title="Blog"
-                  active={isBlogPage}
-                  comingSoon={true}
+                  href="/changelog"
+                  title="Changelog"
+                  active={isChangelogPage}
                 >
-                  Read our latest blog posts.
+                  Read our latest changes.
                 </DesktopListItem>
 
                 <DesktopListItem href="/#faq" title="FAQ" active={false}>
@@ -337,12 +336,11 @@ export function MobileNavigation() {
             <CollapsibleContent>
               <div className="-mx-6 grid gap-6 bg-muted p-6">
                 <MobileListDropdownItem
-                  href="#"
-                  title="Blog"
+                  href="/changelog"
+                  title="Changelog"
                   onClick={() => setOpen(false)}
-                  comingSoon={true}
                 >
-                  Read our latest blog posts.
+                  Read our latest changes.
                 </MobileListDropdownItem>
 
                 <MobileListDropdownItem
