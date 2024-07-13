@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  update:
+  update-changelog:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -38,7 +38,8 @@ jobs:
           commit_message: Update CHANGELOG
           file_pattern: CHANGELOG.md
 
-  Deploy-Production:
+  deploy-production:
+    needs: update-changelog
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
