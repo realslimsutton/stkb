@@ -1123,7 +1123,7 @@ function MarketGridItem({
                   {formatNumber(shopArbitrage, true, false, true)}
                 </>
               ) : (
-                "-"
+                "No Data"
               )}
             </span>
           </p>
@@ -1144,7 +1144,7 @@ function MarketGridItem({
                   {formatNumber(marketArbitrage, true, false, true)}
                 </>
               ) : (
-                "-"
+                "No Data"
               )}
             </span>
           </p>
@@ -1165,7 +1165,7 @@ function MarketGridItem({
                   {formatNumber(fusionArbitrage, true, false, true)}
                 </>
               ) : (
-                "-"
+                "No Data"
               )}
             </span>
           </p>

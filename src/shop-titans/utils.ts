@@ -6,6 +6,12 @@ import { getSession } from "~/auth";
 import { generateUrl } from "~/lib/utils";
 import { type XSollaUser, type Account, type User } from "~/types";
 
+const apiUrls = [
+  "wss://shopr-live2.ripostegames.com",
+  "wss://shopr-live3.ripostegames.com",
+  "wss://shopr-live.ripostegames.com",
+];
+
 export const getUser = React.cache(async () => {
   const { token, user } = await getSession();
   if (!token || !user) {
@@ -46,9 +52,12 @@ export const fetchAccount = React.cache(
 
           setTimeout(() => resolve(null), 5000);
 
-          const ws = new WebSocket("wss://shopr-live2.ripostegames.com", [], {
+          let urlIndex = 0;
+          const urlProvider = () => apiUrls[urlIndex++ % apiUrls.length]!;
+
+          const ws = new WebSocket(urlProvider, [], {
             connectionTimeout: 500,
-            maxRetries: 3,
+            maxRetries: 6,
           });
 
           ws.addEventListener("message", (event) => {
