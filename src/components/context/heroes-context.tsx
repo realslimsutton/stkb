@@ -38,7 +38,7 @@ export function HeroesProvider(props: React.HTMLAttributes<HTMLElement>) {
     }
 
     await localforage.removeItem("heroes");
-    await localforage.removeItem("heroesUpdatedAt");
+    await localforage.removeItem("heros.updatedAt");
 
     await queryClient.invalidateQueries({ queryKey: ["heroes"] });
 
