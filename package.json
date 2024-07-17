@@ -61,6 +61,7 @@
     "next-themes": "^0.3.0",
     "partysocket": "^1.0.1",
     "postgres": "^3.4.4",
+    "posthog-js": "^1.148.0",
     "raw-loader": "^4.0.2",
     "react": "^19.0.0-rc-01172397-20240716",
     "react-dom": "^19.0.0-rc-01172397-20240716",

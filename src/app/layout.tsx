@@ -4,6 +4,7 @@ import { Toaster } from "~/components/ui/sonner";
 import { cn } from "~/lib/utils";
 import "~/styles/globals.css";
 import Providers from "./_components/providers";
+import CSPostHogProvider from "./_components/posthog-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,22 +28,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          inter.variable,
-        )}
-      >
-        <Providers>
-          <a href="#content" className="sr-only focus:not-sr-only">
-            Skip to content
-          </a>
+      <CSPostHogProvider>
+        <body
+          className={cn(
+            "min-h-screen bg-background font-sans antialiased",
+            inter.variable,
+          )}
+        >
+          <Providers>
+            <a href="#content" className="sr-only focus:not-sr-only">
+              Skip to content
+            </a>
 
-          <main id="content">{children}</main>
+            <main id="content">{children}</main>
 
-          <Toaster richColors />
-        </Providers>
-      </body>
+            <Toaster richColors />
+          </Providers>
+        </body>
+      </CSPostHogProvider>
     </html>
   );
 }
