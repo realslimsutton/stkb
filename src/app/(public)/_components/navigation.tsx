@@ -8,7 +8,6 @@ import {
   NavigationMenuList,
 } from "~/components/ui/navigation-menu";
 import { cn } from "~/lib/utils";
-import AuthNavigation from "./navigation/auth";
 import DesktopNavigationItems from "./navigation/desktop-items";
 
 export function DesktopNavigation({

@@ -18,7 +18,7 @@ export default async function MarketPage() {
       <div className="container mx-auto">
         <MarketItemsProvider>
           <MarketPricesProvider debug={isDev}>
-            <React.Suspense>
+            <React.Suspense fallback={null}>
               <MarketGrid />
             </React.Suspense>
           </MarketPricesProvider>

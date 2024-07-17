@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { type z } from "zod";
@@ -29,16 +29,16 @@ import {
   InputOTPSlot,
 } from "~/components/ui/input-otp";
 import fetchUser from "../_actions/fetch-user";
-import { verificationFormSchema } from "../_lib/schema";
+import { searchParamsSchema, verificationFormSchema } from "../_lib/schema";
+import { useParsedSearchParamsSafe } from "~/hooks/use-parsed-search-params";
 
-export default function VerificationForm({
-  email,
-  operationId,
-}: {
-  email: string;
-  operationId: string;
-}) {
+export default function VerificationForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const parsedSearchParams = useParsedSearchParamsSafe(
+    searchParams,
+    searchParamsSchema,
+  );
 
   const form = useForm<z.infer<typeof verificationFormSchema>>({
     resolver: zodResolver(verificationFormSchema),
@@ -50,8 +50,8 @@ export default function VerificationForm({
   const verifyCodeMutation = useMutation({
     mutationFn: async (data: z.infer<typeof verificationFormSchema>) => {
       const searchParams = new URLSearchParams({
-        email,
-        operation_id: operationId,
+        email: parsedSearchParams.data?.email ?? "",
+        operation_id: parsedSearchParams.data?.operationId ?? "",
         code: data.code,
       });
 
@@ -115,6 +115,11 @@ export default function VerificationForm({
         id: toastId,
       });
     }
+  }
+
+  if (!parsedSearchParams.success || !parsedSearchParams.data) {
+    router.push("/auth/login");
+    return null;
   }
 
   return (

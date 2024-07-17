@@ -40,7 +40,7 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import useDataTable from "~/hooks/use-data-table";
-import useParsedSearchParams from "~/hooks/use-parsed-search-params";
+import { useParsedSearchParams } from "~/hooks/use-parsed-search-params";
 import { capitalise, formatArray, formatNumber } from "~/lib/formatter";
 import { cn, createQueryString, getItemIcon, wrapArray } from "~/lib/utils";
 import {

@@ -2,6 +2,9 @@ import * as React from "react";
 import Footer from "./_components/footer";
 import Header from "./_components/header";
 import AuthNavigation from "./_components/navigation/auth";
+import { NavigationMenuLink } from "~/components/ui/navigation-menu";
+import { Button } from "~/components/ui/button";
+import Link from "next/link";
 
 export default async function PublicLayout({
   children,
@@ -15,7 +18,15 @@ export default async function PublicLayout({
 
       <Header
         authNavigation={
-          <React.Suspense fallback={<>Loading...</>}>
+          <React.Suspense
+            fallback={
+              <NavigationMenuLink asChild>
+                <Button asChild>
+                  <Link href="/auth/login">Get Started</Link>
+                </Button>
+              </NavigationMenuLink>
+            }
+          >
             <AuthNavigation />
           </React.Suspense>
         }

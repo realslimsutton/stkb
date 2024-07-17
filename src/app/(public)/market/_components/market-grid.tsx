@@ -62,7 +62,7 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
 import useDataTable from "~/hooks/use-data-table";
-import useParsedSearchParams from "~/hooks/use-parsed-search-params";
+import { useParsedSearchParams } from "~/hooks/use-parsed-search-params";
 import { capitalise, formatArray, formatNumber } from "~/lib/formatter";
 import { cn, createQueryString, wrapArray } from "~/lib/utils";
 import {

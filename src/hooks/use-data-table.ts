@@ -16,7 +16,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { z } from "zod";
-import useParsedSearchParams from "./use-parsed-search-params";
+import { useParsedSearchParams } from "~/hooks/use-parsed-search-params";
 import { createQueryString } from "~/lib/utils";
 
 interface UseDataTableProps<TData, TValue> {
