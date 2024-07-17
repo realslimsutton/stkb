@@ -46,7 +46,7 @@ export const fetchAccount = React.cache(
 
           setTimeout(() => resolve(null), 5000);
 
-          const ws = new WebSocket("wss://shopr-live3.ripostegames.com", [], {
+          const ws = new WebSocket("wss://shopr-live2.ripostegames.com", [], {
             connectionTimeout: 500,
             maxRetries: 3,
           });
@@ -72,6 +72,15 @@ export const fetchAccount = React.cache(
 
           ws.addEventListener("error", () => {
             ws.close();
+          });
+
+          console.log({
+            id: xSollaUser.id,
+            token: token,
+            email: xSollaUser.email,
+            authType: "Xsolla",
+            uuid: user.uuid,
+            command: "Authenticate",
           });
 
           ws.addEventListener("open", () => {

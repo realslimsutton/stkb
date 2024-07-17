@@ -1,9 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
-import { and, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "~/server/db";
-import { blueprints } from "~/server/db/schema";
 import { fetchAccount, getUser } from "~/shop-titans/utils";
 
 const cache = new Map();
