@@ -45,3 +45,19 @@ export function wrapArray<T>(value: T | T[]) {
 export function getItemIcon(id: string) {
   return `https://f9w4sqozvcfkizrn.public.blob.vercel-storage.com/items/${id}.webp`;
 }
+
+export function isRouteActive(pathname: string, routes: string | string[]) {
+  if (Array.isArray(routes)) {
+    return routes.some((route) => pathname.startsWith(route));
+  }
+
+  if (routes === "/" && pathname !== "/") {
+    return false;
+  }
+
+  if (routes === "/heroes" && pathname === "/heros/simulator") {
+    return false;
+  }
+
+  return pathname.startsWith(routes);
+}

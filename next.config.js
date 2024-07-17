@@ -6,6 +6,10 @@ await import("./src/env.js");
 
 /** @type {import("next").NextConfig} */
 const config = {
+  experimental: {
+    ppr: true,
+    reactCompiler: false,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

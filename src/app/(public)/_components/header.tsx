@@ -1,13 +1,16 @@
 "use client";
 
-import * as React from "react";
-import { useInView } from "react-intersection-observer";
 import Logo from "~/components/layout/logo";
 import { cn } from "~/lib/utils";
-import { DesktopNavigation, MobileNavigation } from "./navigation";
-import { type User } from "~/types";
+import { DesktopNavigation } from "./navigation";
+import { MobileNavigation } from "./navigation/mobile";
+import { useInView } from "react-intersection-observer";
 
-export default function Header({ user }: { user: User | null }) {
+export default function Header({
+  authNavigation,
+}: {
+  authNavigation: React.ReactNode;
+}) {
   const { ref, inView } = useInView({
     initialInView: true,
   });
@@ -25,7 +28,7 @@ export default function Header({ user }: { user: User | null }) {
       >
         <Logo href="/" className="mr-auto" />
 
-        <DesktopNavigation user={user} />
+        <DesktopNavigation authNavigation={authNavigation} />
 
         <MobileNavigation />
       </header>

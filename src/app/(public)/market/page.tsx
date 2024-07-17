@@ -1,6 +1,6 @@
+import * as React from "react";
 import { MarketItemsProvider } from "~/components/context/market-items-context";
 import { MarketPricesProvider } from "~/components/context/market-prices-context";
-import { env } from "~/env";
 import PageHeader from "../_components/page-header";
 import MarketGrid from "./_components/market-grid";
 
@@ -18,7 +18,9 @@ export default async function MarketPage() {
       <div className="container mx-auto">
         <MarketItemsProvider>
           <MarketPricesProvider debug={isDev}>
-            <MarketGrid />
+            <React.Suspense fallback={null}>
+              <MarketGrid />
+            </React.Suspense>
           </MarketPricesProvider>
         </MarketItemsProvider>
       </div>
