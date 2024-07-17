@@ -8,6 +8,7 @@ await import("./src/env.js");
 const config = {
   experimental: {
     ppr: true,
+    reactCompiler: true,
   },
   typescript: {
     ignoreBuildErrors: true,
